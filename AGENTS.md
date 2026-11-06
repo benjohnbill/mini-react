@@ -1,9 +1,9 @@
 # AGENTS.md
 
-## PR 작성
+## Writing a PR
 
-PR을 열기 전에 `.github/pull_request_template.md`를 읽고, 그 안의 주석을 따라 본문을 작성합니다.
+Before you open a PR, read `.github/pull_request_template.md`. Write the body by the comments in that file.
 
-- 변경 요약: `diff` 코드 블록과 핵심 코드 조각
-- 구조 변화: 바뀐 흐름과 관계는 `mermaid` 코드 블록, 바뀐 것이 없으면 "없음"
-- "작성자 확인" 체크박스: 비워 둡니다. 작성자가 브라우저에서 직접 체크합니다.
+- 변경 요약: `diff` code blocks and the key code snippet.
+- 구조 변화: a `mermaid` code block for each changed flow or relation. Write "없음" if nothing changed.
+- 작성자 확인: leave these checkboxes empty. The author checks them in the browser.
