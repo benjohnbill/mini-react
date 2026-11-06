@@ -35,7 +35,6 @@ npm run build      # 빌드
 ## 다음에 읽을 것
 
 - `CONVENTION.md`: 작업을 시작하기 전에 읽습니다.
-- `.github/pull_request_template.md`: PR을 열기 전에 읽습니다.
 - `AGENTS.md`: 에이전트에게 작업을 맡기기 전에 읽습니다.
 
 Agents: if a path named here does not exist, report it to the owner.
