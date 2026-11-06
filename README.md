@@ -8,7 +8,7 @@ Status: active
 ## 실행
 
 ```bash
-npm ci             # 도구 설치
+npm ci             # 도구 설치 (Node 버전: .nvmrc)
 npm run dev        # 데모 페이지 실행
 npm run typecheck  # 타입 검사
 npm run check      # 포맷과 린트 검사
@@ -16,8 +16,6 @@ npm run format     # 포맷과 린트 자동 수정
 npm test           # 단위 테스트
 npm run build      # 빌드
 ```
-
-Node 버전은 `.nvmrc`에 있습니다.
 
 ## Map (파일 지도)
 
