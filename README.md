@@ -7,11 +7,27 @@ Status: active
 
 ## 실행
 
-Not runnable: 아직 코드와 도구 설정이 없습니다. 도구 설정 PR이 병합되면 이 칸에 명령을 적습니다.
+```bash
+npm ci             # 도구 설치 (Node 버전: .nvmrc)
+npm run dev        # 데모 페이지 실행
+npm run typecheck  # 타입 검사
+npm run check      # 포맷과 린트 검사
+npm run format     # 포맷과 린트 자동 수정
+npm test           # 단위 테스트
+npm run build      # 빌드
+```
 
 ## Map (파일 지도)
 
-- `.github/pull_request_template.md` (entry): PR 본문의 형식과 작성 안내
+- `src/main.ts` (entry): 데모 페이지의 시작 코드
+- `index.html`: 데모 페이지
+- `.github/pull_request_template.md`: PR 본문의 형식과 작성 안내
+- `.github/workflows/ci.yml`: PR마다 코드와 PR 본문을 검사하는 CI
+- `.github/scripts/check-pr-body.mjs`: PR 본문 형식 검사
+- `package.json`: 명령과 개발 도구 목록. 앱 런타임 의존성은 없습니다.
+- `tsconfig.json`: 타입 규칙
+- `biome.json`: 포맷과 린트 규칙
+- `vitest.config.ts`: 테스트 설정
 - `AGENTS.md`: 레포 안에서 일하는 에이전트를 위한 규칙
 - `CLAUDE.md`: Claude Code가 `AGENTS.md`를 읽도록 연결하는 파일
 
@@ -24,11 +40,11 @@ Agents: if a path named here does not exist, report it to the owner.
 
 ## 팀
 
-| GitHub 계정 | 브랜치 |
-|:---|:---|
-| `benjohnbill` | `CJG` |
+| GitHub 계정   | 브랜치    |
+| :------------ | :-------- |
+| `benjohnbill` | `CJG`     |
 | `oyatmin1031` | 직접 생성 |
-| `DavinAn6` | 직접 생성 |
+| `DavinAn6`    | 직접 생성 |
 
 ## 마일스톤 범위
 
@@ -59,7 +75,7 @@ git fetch origin
 git merge origin/main
 ```
 
-그다음 `.github/pull_request_template.md`의 형식대로 본문을 작성합니다. 확인 항목은 이 템플릿에 있습니다.
+그다음 `.github/pull_request_template.md`의 형식대로 본문을 작성합니다. 확인 항목은 이 템플릿에 있습니다. CI가 코드와 PR 본문 형식을 검사합니다.
 
 ## 시작하기
 
@@ -68,4 +84,6 @@ git clone https://github.com/benjohnbill/mini-react.git
 cd mini-react
 git switch -c <이니셜>
 git push -u origin <이니셜>
+npm ci
+npm test
 ```
