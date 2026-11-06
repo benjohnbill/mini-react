@@ -1,9 +1,17 @@
 # AGENTS.md
 
-## Writing a PR
+Before you change code, commit, or open a PR, read `CONVENTION.md` and `.github/pull_request_template.md`. Write the PR body by the comments in the template.
 
-Before you open a PR, read `.github/pull_request_template.md`. Write the body by the comments in that file.
+@CONVENTION.md
 
-- 변경 요약: `diff` code blocks and the key code snippet.
-- 구조 변화: a `mermaid` code block for each changed flow or relation. Write "없음" if nothing changed.
-- 작성자 확인: leave these checkboxes empty. The author checks them in the browser.
+## Writing a PR body
+
+- If the change alters a flow or a module relation, add a `mermaid` code block.
+- Add this table. Fill it only from commands that you ran. Mark the rest `⏭️ 미실행`.
+
+| 항목 | `main` | 이 브랜치 |
+| ---- | ------ | --------- |
+| 단위 테스트 수 | | |
+| 추가한 테스트 | | |
+| 수정한 기존 테스트 | | |
+| 데모 페이지 동작 | | |
