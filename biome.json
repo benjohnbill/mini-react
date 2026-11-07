@@ -18,6 +18,9 @@
     "enabled": true,
     "rules": {
       "preset": "recommended",
+      "suspicious": {
+        "noImportCycles": "error"
+      },
       "style": {
         "useNamingConvention": {
           "level": "error",
