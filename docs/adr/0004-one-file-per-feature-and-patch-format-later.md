@@ -17,9 +17,7 @@ applyPatchesToDom(container: Element, patches: Patch[]): void
 
 이름은 확정입니다. 매개변수와 반환 타입은 `Patch` 형식을 정할 때 바뀔 수 있습니다.
 
-`createVNodeFromDom`은 글자를 공백까지 유지하고 HTML 주석 노드만 버립니다. 입력칸은 `.value`를 읽어 `props.value`에 담습니다. 공백을 지우면 `<b>a</b> <i>b</i>`의 띄어쓰기가 사라지고, 사용자가 친 글자는 속성에 없기 때문입니다.
-
-`createDomFromVNode`은 문자열 `VNode`를 글자 노드로만 만들고, HTML로 해석하지 않습니다. 문자열을 HTML로 해석하면 `<React>` 같은 글자가 요소로 바뀌어 화면에서 사라지고, 사용자 데이터에 든 `<img src=x onerror=alert(1)>`가 실행됩니다(XSS). `applyPatchesToDom`이 글자를 바꿀 때도 같은 규칙을 따릅니다.
+`createVNodeFromDom`과 `createDomFromVNode`의 변환 규칙은 [ADR 0005](0005-dom-and-vnode-conversion-rules.md)에 있습니다.
 
 ## 고려한 대안
 
@@ -27,7 +25,6 @@ applyPatchesToDom(container: Element, patches: Patch[]): void
 - **최상위 `tests/`와 `pages/`:** `tsconfig.json`의 `include`가 `src`이므로 설정을 넓혀야 CI의 타입 검사에 들어갑니다. 소스 옆에 두면 설정을 바꾸지 않아도 됩니다.
 - **`types.ts`에 `Patch`를 두기:** 관련 없는 타입이 한 파일에 모이기 쉽습니다.
 - **Hooks를 별도 파일로 나누기:** `FunctionComponent`와 세 Hook은 지금 렌더링 중인 컴포넌트를 공유합니다. 나누면 이 값을 설정하는 함수까지 공개해야 합니다.
-- **문자열을 HTML로 해석하기(`innerHTML`):** HTML 조각을 문자열 하나로 적을 수 있지만, 글자와 HTML을 구별할 수 없고 XSS가 생깁니다. React도 JSX에 넣은 값을 기본으로 이스케이프하고, HTML 해석은 `dangerouslySetInnerHTML`로 따로 엽니다([JSX Prevents Injection Attacks](https://legacy.reactjs.org/docs/introducing-jsx.html), [`dangerouslySetInnerHTML`](https://react.dev/reference/react-dom/components/common)).
 - **`Patch` 형식을 먼저 정하기:** `diffViews`와 `applyPatchesToDom`을 다른 사람이 동시에 맡을 수 있지만, 구현해 보지 않은 형식을 팀에 지시하게 됩니다.
 
 ## 결과
