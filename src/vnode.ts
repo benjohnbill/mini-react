@@ -2,8 +2,7 @@ export type VNode =
   | string
   | { type: string; props: Record<string, string>; children: VNode[] };
 
-export function createDomFromVnode(vnode: VNode): Node {
-  console.log("createDom", vnode);
+export function createDomFromVNode(vnode: VNode): Node {
   if (typeof vnode === "string") {
     return document.createTextNode(vnode);
   }
@@ -12,7 +11,7 @@ export function createDomFromVnode(vnode: VNode): Node {
     element.setAttribute(key, value);
   }
   for (const child of vnode.children) {
-    element.append(createDomFromVnode(child));
+    element.append(createDomFromVNode(child));
   }
   return element;
 }

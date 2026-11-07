@@ -1,4 +1,4 @@
-import { createDomFromVnode, type VNode } from "./vdom";
+import { createDomFromVNode, type VNode } from "./vnode";
 
 const newNode: VNode = { type: "b", props: {}, children: ["new"] };
 
@@ -13,4 +13,4 @@ const view: VNode = {
 
 const app = document.querySelector("#app");
 if (!app) throw new Error("There's no element in #app");
-app.append(createDomFromVnode(view));
+app.append(createDomFromVNode(view));
