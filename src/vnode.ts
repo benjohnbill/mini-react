@@ -47,3 +47,30 @@ export function createVNodeFromDom(element: Element): VNode {
     children: createChildrenFromNodes(element.childNodes),
   };
 }
+
+/* props를 DOM 요소에 실제로 적용한다 */
+export function applyPropsToElement(
+  element: Element,
+  props: Record<string, string>,
+): void {
+  for (const [name, value] of Object.entries(props)) {
+    if (name === "value" && hasValueProperty(element)) {
+      (element as HTMLInputElement | HTMLTextAreaElement).value = value;
+    } else {
+      element.setAttribute(name, value);
+    }
+  }
+}
+
+/* VNode 하나를 새 DOM 노드로 만든다 (VNode -> DOM) */
+export function createDomFromVNode(vnode: VNode): Node {
+  if (typeof vnode === "string") {
+    return document.createTextNode(vnode);
+  }
+  const element = document.createElement(vnode.type);
+  for (const child of vnode.children) {
+    element.append(createDomFromVNode(child));
+  }
+  applyPropsToElement(element, vnode.props);
+  return element;
+}
