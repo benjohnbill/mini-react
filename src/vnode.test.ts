@@ -628,7 +628,10 @@ describe("isTextInput", () => {
     );
   });
 
-  it("T52 checkbox와 radio는 입력칸이 아닙니다", () => {
+  it("T52 checkbox, radio, file은 입력칸이 아닙니다", () => {
+    expect(isTextInput(createElementFromHtml('<input type="file">'))).toBe(
+      false,
+    );
     expect(isTextInput(createElementFromHtml('<input type="checkbox">'))).toBe(
       false,
     );

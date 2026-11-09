@@ -27,10 +27,10 @@
 
 ```text
 src/
-├── vnode.ts               VNode, createVNodeFromDom, createDomFromVNode
+├── vnode.ts               VNode, createVNodeFromDom, createDomFromVNode, isTextInput
 ├── patch.ts               Patch, applyPatchesToDom
 ├── diff.ts                diffViews
-├── history.ts             State History
+├── history.ts             StateHistory
 ├── function-component.ts  FunctionComponent, useState, useEffect, useMemo
 ├── main.ts                시작 코드
 └── test-pages/

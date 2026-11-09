@@ -586,4 +586,25 @@ describe("applyPatchesToDom", () => {
       expect(container.innerHTML).toBe("<p>a</p>");
     });
   });
+  describe("리뷰에서 찾은 사례", () => {
+    it("P38 file 입력칸을 글자 입력칸으로 바꾸는 PROPS도 오류 없이 적용합니다", () => {
+      const container = createContainerFromHtml(
+        '<div><input type="file"><p>a</p></div>',
+      );
+      applyPatchesToDom(container, [
+        {
+          type: "PROPS",
+          path: [0],
+          set: { value: "abc", type: "text" },
+          remove: [],
+        },
+      ]);
+      const input = getViewElement(container).firstElementChild;
+      if (!(input instanceof HTMLInputElement)) {
+        throw new Error("Fixture is not an input");
+      }
+      expect(input.type).toBe("text");
+      expect(input.value).toBe("abc");
+    });
+  });
 });

@@ -26,6 +26,7 @@ type Patch =
 ## path
 
 - `View`에서 노드까지 내려가는 `children` 번호의 목록입니다. `[]`는 `View` 자신이고, `container`는 그대로 남습니다.
+- `container`에는 `View` 하나만 둡니다. `applyPatchesToDom`은 `container`의 첫 글자 또는 요소 자식을 `View`로 보므로, `View` 앞에 공백 글자가 있으면 `[]`가 그 공백을 가리킵니다.
 - 번호는 글자 노드와 요소만 셉니다. `VNode`의 `children`과 번호를 맞추기 위해서입니다. 주석은 세지 않습니다(ADR 0005).
 - 각 `path`는 앞의 `Patch`를 적용한 뒤의 트리를 기준으로 합니다.
 

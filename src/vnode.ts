@@ -51,6 +51,7 @@ export function isTextInput(element: Element): element is HTMLInputElement {
   return (
     element instanceof HTMLInputElement &&
     element.type !== "checkbox" &&
-    element.type !== "radio"
+    element.type !== "radio" &&
+    element.type !== "file"
   );
 }
