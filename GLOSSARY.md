@@ -20,6 +20,10 @@ _Avoid_: 변경 사항, 델타
 `View`에서 노드까지 내려가는 `children` 번호의 목록입니다. `[]`는 `View` 자신입니다.
 _Avoid_: 경로 배열, 인덱스 목록
 
+**StateHistory**:
+저장한 `View`의 목록과 현재 위치입니다. 뒤로 간 뒤 새 `View`를 저장하면 앞쪽 `View`를 지웁니다.
+_Avoid_: 이력 스택, 스냅샷 배열
+
 **container**:
 `View`를 그려 넣는 DOM 요소입니다.
 _Avoid_: 루트, 마운트 지점

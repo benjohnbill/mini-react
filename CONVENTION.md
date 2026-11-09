@@ -101,7 +101,11 @@ applyPatchesToDom(container, patches);
 | `find` | 찾습니다. 없으면 `undefined`를 돌려줍니다 |
 | `get` | 찾습니다. 없으면 `Error`를 던집니다 |
 | `is`, `has` | 참과 거짓을 묻습니다. `boolean`을 돌려줍니다 |
+| `can` | 할 수 있는지 묻습니다. `boolean`을 돌려줍니다 |
+| `push` | 목록의 끝에 더합니다 |
+| `back`, `forward` | 이력에서 한 칸 옮기고 그 자리의 값을 돌려줍니다. 옮길 수 없으면 `null`을 돌려줍니다 |
 
+- `StateHistory`의 메서드는 브라우저 History와 팀 테스트 시트의 이름(`push`, `back`, `forward`, `current`, `canBack`, `canForward`, `size`)을 씁니다. `current`와 `size`는 값을 묻는 이름이라 동사를 붙이지 않습니다.
 - 변환 함수는 `create<결과>From<입력>`으로 짓습니다. 비교 방식 같은 구현은 이름에 넣지 않습니다.
 - 변수는 명사로 짓고, 쓰이는 범위가 넓을수록 길게 짓습니다.
 - 숫자 상수에는 이름을 붙입니다.
