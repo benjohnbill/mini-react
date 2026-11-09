@@ -44,7 +44,7 @@ function createHistoryWithViews(labels: string[]): StateHistory {
   return history;
 }
 
-describe.skip("StateHistory", () => {
+describe("StateHistory", () => {
   describe("초기와 현재 조회", () => {
     it("H1 새 이력은 현재 View가 없고 앞뒤로 갈 수 없습니다", () => {
       const history = new StateHistory();

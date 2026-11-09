@@ -1,31 +1,48 @@
 import type { VNode } from "./vnode";
 
 export class StateHistory {
+  private views: VNode[] = [];
+  private position = -1;
+
   push(view: VNode): void {
-    throw new Error("아직 구현하지 않았습니다");
+    this.views.length = this.position + 1;
+    this.views.push(structuredClone(view));
+    this.position = this.views.length - 1;
   }
 
   current(): VNode | null {
-    throw new Error("아직 구현하지 않았습니다");
+    const view = this.views[this.position];
+    if (view === undefined) {
+      return null;
+    }
+    return structuredClone(view);
   }
 
   back(): VNode | null {
-    throw new Error("아직 구현하지 않았습니다");
+    if (!this.canBack()) {
+      return null;
+    }
+    this.position -= 1;
+    return this.current();
   }
 
   forward(): VNode | null {
-    throw new Error("아직 구현하지 않았습니다");
+    if (!this.canForward()) {
+      return null;
+    }
+    this.position += 1;
+    return this.current();
   }
 
   canBack(): boolean {
-    throw new Error("아직 구현하지 않았습니다");
+    return this.position > 0;
   }
 
   canForward(): boolean {
-    throw new Error("아직 구현하지 않았습니다");
+    return this.position < this.views.length - 1;
   }
 
   get size(): number {
-    throw new Error("아직 구현하지 않았습니다");
+    return this.views.length;
   }
 }
