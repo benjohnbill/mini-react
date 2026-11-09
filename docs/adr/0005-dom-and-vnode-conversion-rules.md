@@ -34,6 +34,7 @@ status: proposed
 
 - 아무것도 치지 않은 `<input>`을 왕복하면 `<input value="">`가 되어, 원본과 `isEqualNode`로 비교하면 `false`입니다. 입력칸의 왕복 테스트는 `.value`로 비교합니다. `isEqualNode`는 `.value`를 보지 못합니다.
 - 주석이 든 DOM은 왕복하면 주석이 사라지므로 왕복 테스트에 쓰지 않습니다.
+- `createVNodeFromDom`은 요소만 받습니다(ADR 0004의 시그니처). 글자나 주석 노드 하나를 루트로 읽는 경우는 다루지 않고, 요소의 자식으로 읽는 경우만 검사합니다.
 - 다음은 다루지 않습니다.
   - `textarea`, `select`, `checkbox`, `radio`, `file`: 지금 상태가 `.value` 하나에 있지 않습니다. `textarea`는 자식 글자가 처음 값으로 남고, `select`는 `selected` 속성이 처음 고른 항목으로 남고, `checkbox`와 `radio`는 상태가 `.checked`에 있습니다. `file`은 상태가 고른 파일 목록에 있고, 스크립트가 `.value`에 글자를 쓰면 `InvalidStateError`가 납니다. 각자 전용 규칙이 필요합니다.
   - SVG: 이름공간을 따로 다뤄야 합니다. HTML 이름공간으로 만들면 `viewBox` 같은 속성의 대소문자가 사라집니다.
