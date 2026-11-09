@@ -33,7 +33,7 @@ function applyPatchesWhileObserving(
   return records;
 }
 
-describe.skip("applyPatchesToDom", () => {
+describe("applyPatchesToDom", () => {
   describe("종류별 변경", () => {
     it("P1 TEXT는 글자 노드의 글자를 바꿉니다", () => {
       const container = createContainerFromHtml("<div><p>a</p><p>x</p></div>");

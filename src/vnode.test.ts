@@ -43,7 +43,7 @@ function countNestingLevel(vnode: VNode): number {
   return level;
 }
 
-describe.skip("createVNodeFromDom", () => {
+describe("createVNodeFromDom", () => {
   describe("노드 종류", () => {
     it("T1 요소 노드를 객체로 읽습니다", () => {
       expect(
@@ -426,7 +426,7 @@ describe.skip("createVNodeFromDom", () => {
   });
 });
 
-describe.skip("createDomFromVNode", () => {
+describe("createDomFromVNode", () => {
   it("T22 요소를 만듭니다", () => {
     const node = createDomFromVNode({ type: "div", props: {}, children: [] });
     expect(node.isEqualNode(createElementFromHtml("<div></div>"))).toBe(true);
@@ -620,7 +620,7 @@ describe.skip("createDomFromVNode", () => {
   });
 });
 
-describe.skip("isTextInput", () => {
+describe("isTextInput", () => {
   it("T51 type이 없거나 text인 input은 입력칸입니다", () => {
     expect(isTextInput(createElementFromHtml("<input>"))).toBe(true);
     expect(isTextInput(createElementFromHtml('<input type="text">'))).toBe(
