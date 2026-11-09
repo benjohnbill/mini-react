@@ -33,7 +33,7 @@ function createListVNode(items: string[]): VNode {
   );
 }
 
-describe.skip("diffViews", () => {
+describe("diffViews", () => {
   describe("변경 없음", () => {
     it("D1 내용이 같은 두 View는 빈 배열을 돌려줍니다", () => {
       expect(
