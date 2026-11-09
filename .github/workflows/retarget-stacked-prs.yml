@@ -1,0 +1,28 @@
+name: Retarget stacked PRs
+
+# 쌓은 PR의 아래쪽이 병합되면, 그 브랜치를 base로 쓰던 열린 PR의 base를 병합 대상으로 옮깁니다.
+# 개인 브랜치는 병합 후에도 지우지 않으므로, GitHub의 자동 base 변경(브랜치 삭제 시)이 일어나지 않습니다.
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  retarget:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          MERGED_HEAD: ${{ github.event.pull_request.head.ref }}
+          MERGED_BASE: ${{ github.event.pull_request.base.ref }}
+        run: |
+          gh pr list --base "$MERGED_HEAD" --state open --json number --jq '.[].number' |
+            while read -r number; do
+              gh pr edit "$number" --base "$MERGED_BASE"
+              echo "#$number: $MERGED_HEAD -> $MERGED_BASE"
+            done

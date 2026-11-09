@@ -1,6 +1,6 @@
 # 팀 규칙
 
-1. **브랜치:** `main`은 PR로만 변경합니다. 개인 브랜치는 이니셜로 만들고 병합 후에도 유지합니다. 임시 feature 브랜치는 개인 브랜치끼리 먼저 합칠 때만 만듭니다. 이유는 [ADR 0001](docs/adr/0001-personal-branches-no-forks.md)에 있습니다.
+1. **브랜치:** `main`은 PR로만 변경합니다. 개인 브랜치는 이니셜로 만들고 병합 후에도 유지합니다. 임시 feature 브랜치는 개인 브랜치끼리 먼저 합칠 때만 만듭니다. 이유는 [ADR 0001](docs/adr/0001-personal-branches-no-forks.md)에 있습니다. 다른 PR의 브랜치를 base로 쌓은 PR은, 아래쪽 PR이 병합되면 `retarget-stacked-prs` workflow가 base를 병합 대상으로 옮깁니다.
 2. **PR 전:** `main`의 최신 내용을 개인 브랜치에 반영합니다.
 
    ```bash
