@@ -103,6 +103,7 @@ applyPatchesToDom(container, patches);
 | `is`, `has` | 참과 거짓을 묻습니다. `boolean`을 돌려줍니다 |
 | `can` | 할 수 있는지 묻습니다. `boolean`을 돌려줍니다 |
 | `push` | 목록의 끝에 더합니다 |
+| `start` | 페이지의 처음 상태를 만들고 이벤트를 연결합니다. 값을 돌려주지 않습니다 |
 | `back`, `forward` | 이력에서 한 칸 옮기고 그 자리의 값을 돌려줍니다. 옮길 수 없으면 `null`을 돌려줍니다 |
 
 - `StateHistory`의 메서드는 브라우저 History와 팀 테스트 시트의 이름(`push`, `back`, `forward`, `current`, `canBack`, `canForward`, `size`)을 씁니다. `current`와 `size`는 값을 묻는 이름이라 동사를 붙이지 않습니다.
