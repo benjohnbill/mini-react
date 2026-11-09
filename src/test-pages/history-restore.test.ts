@@ -81,14 +81,67 @@ const D_VIEW: VNode = {
   ],
 };
 
-// index.html의 샘플 View에서 이 파일이 확인하는 부분입니다.
-const INITIAL_HEADING = "할 일";
+// index.html의 샘플 View입니다. verification-page.test.ts의 INITIAL_VIEW와 같습니다.
+const INITIAL_VIEW: VNode = {
+  type: "section",
+  props: { class: "sample" },
+  children: [
+    "\n",
+    { type: "h3", props: {}, children: ["할 일"] },
+    "\n",
+    {
+      type: "p",
+      props: {},
+      children: [
+        "오늘 할 일을 ",
+        { type: "strong", props: {}, children: ["세 개"] },
+        " 적었습니다.",
+      ],
+    },
+    "\n",
+    {
+      type: "ul",
+      props: {},
+      children: [
+        "\n",
+        { type: "li", props: {}, children: ["장보기"] },
+        "\n",
+        { type: "li", props: {}, children: ["운동"] },
+        "\n",
+        { type: "li", props: {}, children: ["책 읽기"] },
+        "\n",
+      ],
+    },
+    "\n",
+    {
+      type: "label",
+      props: {},
+      children: [
+        "메모 ",
+        {
+          type: "input",
+          props: { type: "text", value: "첫 메모" },
+          children: [],
+        },
+      ],
+    },
+    "\n",
+  ],
+};
 
-function startPageFromIndexHtml(): Page {
+function createPageFromIndexHtml(): Page {
+  applyIndexHtmlToBody();
+  startVerificationPage(document);
+  return createPageFromBody();
+}
+
+function applyIndexHtmlToBody(): void {
   const indexDocument = new DOMParser().parseFromString(indexHtml, "text/html");
   // innerHTML로 넣은 script는 실행되지 않으므로, main.ts가 함께 돌지 않습니다.
   document.body.innerHTML = indexDocument.body.innerHTML;
-  startVerificationPage(document);
+}
+
+function createPageFromBody(): Page {
   return {
     real: getPageElement("#real", HTMLElement),
     test: getPageElement("#test", HTMLTextAreaElement),
@@ -110,7 +163,7 @@ function getPageElement<T extends Element>(
   return element;
 }
 
-function patchWithHtml(page: Page, html: string): void {
+function applyHtmlWithPatchButton(page: Page, html: string): void {
   page.test.value = html;
   page.test.dispatchEvent(new Event("input", { bubbles: true }));
   page.patchButton.click();
@@ -134,7 +187,10 @@ function createViewFromHtml(html: string): VNode {
   return createVNodeFromDom(viewElement);
 }
 
-function observeRealWhile(page: Page, action: () => void): MutationRecord[] {
+function createMutationRecordsWhile(
+  page: Page,
+  action: () => void,
+): MutationRecord[] {
   const observer = new MutationObserver(() => {});
   observer.observe(page.real, {
     subtree: true,
@@ -148,10 +204,13 @@ function observeRealWhile(page: Page, action: () => void): MutationRecord[] {
   return records;
 }
 
-function getButtonStates(page: Page): { back: boolean; forward: boolean } {
+function createDisabledStatesFromButtons(page: Page): {
+  backDisabled: boolean;
+  forwardDisabled: boolean;
+} {
   return {
-    back: page.backButton.disabled,
-    forward: page.forwardButton.disabled,
+    backDisabled: page.backButton.disabled,
+    forwardDisabled: page.forwardButton.disabled,
   };
 }
 
@@ -162,21 +221,12 @@ function expectPageToShowView(page: Page, view: VNode): void {
   expect(createVNodeFromDom(getRealViewElement(page))).toEqual(view);
   expect(createViewFromHtml(page.test.value)).toEqual(view);
 
-  const buttonStates = getButtonStates(page);
-  const records = observeRealWhile(page, () => {
+  const buttonStates = createDisabledStatesFromButtons(page);
+  const records = createMutationRecordsWhile(page, () => {
     page.patchButton.click();
   });
   expect(records).toHaveLength(0);
-  expect(getButtonStates(page)).toEqual(buttonStates);
-}
-
-function expectPageToShowInitialView(page: Page): void {
-  expect(getRealViewElement(page).querySelector("h3")?.textContent).toBe(
-    INITIAL_HEADING,
-  );
-  expect(createViewFromHtml(page.test.value)).toEqual(
-    createVNodeFromDom(getRealViewElement(page)),
-  );
+  expect(createDisabledStatesFromButtons(page)).toEqual(buttonStates);
 }
 
 function countBackStepsToStart(page: Page): number {
@@ -190,27 +240,39 @@ function countBackStepsToStart(page: Page): number {
 
 describe("I-HR History와 화면 복원", () => {
   it("HR-N01 처음 View를 한 번 저장하고, 첫 Patch 뒤 한 번 뒤로 가면 처음 View로 돌아옵니다", () => {
-    const page = startPageFromIndexHtml();
-    expect(getButtonStates(page)).toEqual({ back: true, forward: true });
+    const page = createPageFromIndexHtml();
+    expect(createDisabledStatesFromButtons(page)).toEqual({
+      backDisabled: true,
+      forwardDisabled: true,
+    });
 
-    patchWithHtml(page, A_HTML);
+    applyHtmlWithPatchButton(page, A_HTML);
     expectPageToShowView(page, A_VIEW);
-    expect(getButtonStates(page)).toEqual({ back: false, forward: true });
+    expect(createDisabledStatesFromButtons(page)).toEqual({
+      backDisabled: false,
+      forwardDisabled: true,
+    });
 
     page.backButton.click();
-    expectPageToShowInitialView(page);
-    expect(getButtonStates(page)).toEqual({ back: true, forward: false });
+    expectPageToShowView(page, INITIAL_VIEW);
+    expect(createDisabledStatesFromButtons(page)).toEqual({
+      backDisabled: true,
+      forwardDisabled: false,
+    });
 
     page.forwardButton.click();
     expectPageToShowView(page, A_VIEW);
-    expect(getButtonStates(page)).toEqual({ back: false, forward: true });
+    expect(createDisabledStatesFromButtons(page)).toEqual({
+      backDisabled: false,
+      forwardDisabled: true,
+    });
   });
 
   it("HR-N02 A, B, C 사이를 두 번 오가도 두 영역과 현재 View가 같고 이력이 늘지 않습니다", () => {
-    const page = startPageFromIndexHtml();
-    patchWithHtml(page, A_HTML);
-    patchWithHtml(page, B_HTML);
-    patchWithHtml(page, C_HTML);
+    const page = createPageFromIndexHtml();
+    applyHtmlWithPatchButton(page, A_HTML);
+    applyHtmlWithPatchButton(page, B_HTML);
+    applyHtmlWithPatchButton(page, C_HTML);
     expectPageToShowView(page, C_VIEW);
 
     for (let round = 0; round < 2; round++) {
@@ -222,18 +284,24 @@ describe("I-HR History와 화면 복원", () => {
       expectPageToShowView(page, B_VIEW);
       page.forwardButton.click();
       expectPageToShowView(page, C_VIEW);
-      expect(getButtonStates(page)).toEqual({ back: false, forward: true });
+      expect(createDisabledStatesFromButtons(page)).toEqual({
+        backDisabled: false,
+        forwardDisabled: true,
+      });
     }
 
     // 처음 샘플, A, B, C의 네 View이므로 처음까지 세 번 뒤로 갑니다.
     expect(countBackStepsToStart(page)).toBe(3);
-    expectPageToShowInitialView(page);
+    expectPageToShowView(page, INITIAL_VIEW);
   });
 
   it("HR-N03 입력칸의 현재 값은 value 속성이 아니라 .value로 저장되고 복원됩니다", () => {
-    const page = startPageFromIndexHtml();
-    patchWithHtml(page, '<form><input type="text" value="typed"></form>');
-    patchWithHtml(page, '<form><input type="text" value=""></form>');
+    const page = createPageFromIndexHtml();
+    applyHtmlWithPatchButton(
+      page,
+      '<form><input type="text" value="typed"></form>',
+    );
+    applyHtmlWithPatchButton(page, '<form><input type="text" value=""></form>');
     const input = getRealViewElement(page).querySelector("input");
     if (input === null) {
       throw new Error("#real has no input");
@@ -269,14 +337,17 @@ describe("I-HR History와 화면 복원", () => {
   });
 
   it("HR-N04 FLOW-N03 B로 돌아가 D를 Patch하면 이력은 처음, A, B, D이고 C로 갈 수 없습니다", () => {
-    const page = startPageFromIndexHtml();
-    patchWithHtml(page, A_HTML);
-    patchWithHtml(page, B_HTML);
-    patchWithHtml(page, C_HTML);
+    const page = createPageFromIndexHtml();
+    applyHtmlWithPatchButton(page, A_HTML);
+    applyHtmlWithPatchButton(page, B_HTML);
+    applyHtmlWithPatchButton(page, C_HTML);
     page.backButton.click();
-    patchWithHtml(page, D_HTML);
+    applyHtmlWithPatchButton(page, D_HTML);
     expectPageToShowView(page, D_VIEW);
-    expect(getButtonStates(page)).toEqual({ back: false, forward: true });
+    expect(createDisabledStatesFromButtons(page)).toEqual({
+      backDisabled: false,
+      forwardDisabled: true,
+    });
 
     page.forwardButton.click();
     expectPageToShowView(page, D_VIEW);
@@ -289,33 +360,42 @@ describe("I-HR History와 화면 복원", () => {
     expectPageToShowView(page, B_VIEW);
     page.forwardButton.click();
     expectPageToShowView(page, D_VIEW);
-    expect(getButtonStates(page)).toEqual({ back: false, forward: true });
+    expect(createDisabledStatesFromButtons(page)).toEqual({
+      backDisabled: false,
+      forwardDisabled: true,
+    });
     expect(countBackStepsToStart(page)).toBe(3);
   });
 
   describe("HR-N05 바뀌지 않거나 거절된 입력은 이력을 바꾸지 않습니다", () => {
     it("HR-N05a 처음 상태에서 고치지 않고 Patch하면 이력이 늘지 않습니다", () => {
-      const page = startPageFromIndexHtml();
+      const page = createPageFromIndexHtml();
       page.patchButton.click();
       page.patchButton.click();
-      expect(getButtonStates(page)).toEqual({ back: true, forward: true });
+      expect(createDisabledStatesFromButtons(page)).toEqual({
+        backDisabled: true,
+        forwardDisabled: true,
+      });
     });
 
     it("HR-N05b 과거 위치에서 빈 입력과 최상위 둘을 거절하면 현재 View, 앞쪽 기록, 실제 영역이 모두 남습니다", () => {
-      const page = startPageFromIndexHtml();
-      patchWithHtml(page, A_HTML);
-      patchWithHtml(page, B_HTML);
-      patchWithHtml(page, C_HTML);
+      const page = createPageFromIndexHtml();
+      applyHtmlWithPatchButton(page, A_HTML);
+      applyHtmlWithPatchButton(page, B_HTML);
+      applyHtmlWithPatchButton(page, C_HTML);
       page.backButton.click();
 
       for (const rejectedHtml of ["", "<p>a</p><p>b</p>"]) {
-        const records = observeRealWhile(page, () => {
-          patchWithHtml(page, rejectedHtml);
+        const records = createMutationRecordsWhile(page, () => {
+          applyHtmlWithPatchButton(page, rejectedHtml);
         });
         expect(records).toHaveLength(0);
         expect(page.message.textContent).toBe("최상위 노드가 하나 필요합니다");
         expect(createVNodeFromDom(getRealViewElement(page))).toEqual(B_VIEW);
-        expect(getButtonStates(page)).toEqual({ back: false, forward: false });
+        expect(createDisabledStatesFromButtons(page)).toEqual({
+          backDisabled: false,
+          forwardDisabled: false,
+        });
       }
 
       page.forwardButton.click();
@@ -330,30 +410,36 @@ describe("I-HR History와 화면 복원", () => {
 
   describe("DEC-09 과거 위치에서 바뀐 것이 없는 Patch는 앞쪽 기록을 남깁니다", () => {
     it("DEC-09a 그대로 Patch하면 실제 영역이 바뀌지 않고 앞으로 C에 갈 수 있습니다", () => {
-      const page = startPageFromIndexHtml();
-      patchWithHtml(page, A_HTML);
-      patchWithHtml(page, B_HTML);
-      patchWithHtml(page, C_HTML);
+      const page = createPageFromIndexHtml();
+      applyHtmlWithPatchButton(page, A_HTML);
+      applyHtmlWithPatchButton(page, B_HTML);
+      applyHtmlWithPatchButton(page, C_HTML);
       page.backButton.click();
 
-      const records = observeRealWhile(page, () => {
+      const records = createMutationRecordsWhile(page, () => {
         page.patchButton.click();
       });
       expect(records).toHaveLength(0);
-      expect(getButtonStates(page)).toEqual({ back: false, forward: false });
+      expect(createDisabledStatesFromButtons(page)).toEqual({
+        backDisabled: false,
+        forwardDisabled: false,
+      });
       page.forwardButton.click();
       expectPageToShowView(page, C_VIEW);
     });
 
     it("DEC-09b 주석만 더해 View가 같으면 바뀐 것이 없는 Patch로 봅니다", () => {
-      const page = startPageFromIndexHtml();
-      patchWithHtml(page, A_HTML);
-      patchWithHtml(page, B_HTML);
-      patchWithHtml(page, C_HTML);
+      const page = createPageFromIndexHtml();
+      applyHtmlWithPatchButton(page, A_HTML);
+      applyHtmlWithPatchButton(page, B_HTML);
+      applyHtmlWithPatchButton(page, C_HTML);
       page.backButton.click();
 
-      const records = observeRealWhile(page, () => {
-        patchWithHtml(page, B_HTML.replace("<ul>", "<!-- 메모 --><ul>"));
+      const records = createMutationRecordsWhile(page, () => {
+        applyHtmlWithPatchButton(
+          page,
+          B_HTML.replace("<ul>", "<!-- 메모 --><ul>"),
+        );
       });
       expect(records).toHaveLength(0);
       page.forwardButton.click();
@@ -363,10 +449,10 @@ describe("I-HR History와 화면 복원", () => {
 
   describe("DEC-10 HR-N06 FLOW-N02 Patch하지 않은 편집은 이동할 때 버립니다", () => {
     it("HR-N06a 뒤로가기는 편집 X를 버리고 두 영역을 A로 바꿉니다", () => {
-      const page = startPageFromIndexHtml();
-      patchWithHtml(page, A_HTML);
-      patchWithHtml(page, B_HTML);
-      patchWithHtml(page, C_HTML);
+      const page = createPageFromIndexHtml();
+      applyHtmlWithPatchButton(page, A_HTML);
+      applyHtmlWithPatchButton(page, B_HTML);
+      applyHtmlWithPatchButton(page, C_HTML);
       page.backButton.click();
       page.test.value = '<div id="x">X</div>';
 
@@ -377,10 +463,10 @@ describe("I-HR History와 화면 복원", () => {
     });
 
     it("HR-N06b 앞으로가기는 편집 X를 버리고 두 영역을 C로 바꿉니다", () => {
-      const page = startPageFromIndexHtml();
-      patchWithHtml(page, A_HTML);
-      patchWithHtml(page, B_HTML);
-      patchWithHtml(page, C_HTML);
+      const page = createPageFromIndexHtml();
+      applyHtmlWithPatchButton(page, A_HTML);
+      applyHtmlWithPatchButton(page, B_HTML);
+      applyHtmlWithPatchButton(page, C_HTML);
       page.backButton.click();
       page.test.value = '<div id="x">X</div>';
 
@@ -390,18 +476,60 @@ describe("I-HR History와 화면 복원", () => {
     });
 
     it("FLOW-N02 저장한 B는 뒤의 편집과 새 Patch로 바뀌지 않습니다", () => {
-      const page = startPageFromIndexHtml();
-      patchWithHtml(page, A_HTML);
-      patchWithHtml(page, B_HTML);
+      const page = createPageFromIndexHtml();
+      applyHtmlWithPatchButton(page, A_HTML);
+      applyHtmlWithPatchButton(page, B_HTML);
       page.test.value = C_HTML;
       page.backButton.click();
       expectPageToShowView(page, A_VIEW);
       page.forwardButton.click();
       expectPageToShowView(page, B_VIEW);
 
-      patchWithHtml(page, D_HTML);
+      applyHtmlWithPatchButton(page, D_HTML);
       page.backButton.click();
       expectPageToShowView(page, B_VIEW);
+    });
+  });
+
+  // 저장한 View를 테스트 영역의 HTML로 바꿨다가 다시 읽으면 주석은 사라지고 붙은 글자는 하나로 합쳐집니다.
+  describe("HR-N07 HTML로 오가도 모양이 같은 View를 저장합니다", () => {
+    for (const between of [
+      "<!--x-->",
+      "<script>1</script>",
+      "<iframe></iframe>",
+    ]) {
+      it(`HR-N07 글자 사이의 ${between}를 지운 View로 돌아가 그대로 Patch하면 이력이 늘지 않습니다`, () => {
+        const page = createPageFromIndexHtml();
+        applyHtmlWithPatchButton(page, "<p>x</p>");
+        applyHtmlWithPatchButton(page, `<p>a${between}b</p>`);
+        applyHtmlWithPatchButton(page, "<p>z</p>");
+        page.backButton.click();
+
+        expect(page.real.innerHTML).toBe("<p>ab</p>");
+        expectPageToShowView(page, { type: "p", props: {}, children: ["ab"] });
+        expect(createDisabledStatesFromButtons(page)).toEqual({
+          backDisabled: false,
+          forwardDisabled: false,
+        });
+      });
+    }
+
+    it("HR-N08 처음 실제 영역의 주석도 지우고 글자를 합친 뒤 처음 View로 저장합니다", () => {
+      applyIndexHtmlToBody();
+      const heading = document.querySelector("#real h3");
+      if (heading === null) {
+        throw new Error("Sample has no h3");
+      }
+      heading.replaceChildren("할 ", document.createComment("x"), "일");
+      startVerificationPage(document);
+      const page = createPageFromBody();
+
+      expect(page.real.querySelector("h3")?.childNodes).toHaveLength(1);
+      expectPageToShowView(page, INITIAL_VIEW);
+      expect(createDisabledStatesFromButtons(page)).toEqual({
+        backDisabled: true,
+        forwardDisabled: true,
+      });
     });
   });
 });
