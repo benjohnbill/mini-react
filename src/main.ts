@@ -1,5 +1,3 @@
-const app = document.querySelector("#app");
+import { startVerificationPage } from "./test-pages/verification-page";
 
-if (app) {
-  app.textContent = "mini-react";
-}
+startVerificationPage(document);

@@ -3,10 +3,73 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>mini-react</title>
+    <title>mini-react 검증 페이지</title>
+    <style>
+      body {
+        margin: 1.5rem;
+        font-family: system-ui, sans-serif;
+      }
+      .verify-layout {
+        display: flex;
+        gap: 1.5rem;
+        align-items: flex-start;
+      }
+      .verify-layout > section {
+        flex: 1;
+        min-width: 0;
+      }
+      #real {
+        min-height: 12rem;
+        padding: 0.75rem;
+        border: 2px solid #4a6fa5;
+        border-radius: 6px;
+      }
+      #test {
+        box-sizing: border-box;
+        width: 100%;
+        font-family: ui-monospace, monospace;
+      }
+      .verify-buttons {
+        display: flex;
+        gap: 0.5rem;
+        margin: 0.5rem 0;
+      }
+      #message {
+        min-height: 1.5em;
+        color: #c62828;
+      }
+    </style>
   </head>
   <body>
-    <div id="app"></div>
+    <h1>mini-react 검증 페이지</h1>
+    <div class="verify-layout">
+      <section>
+        <h2>실제 영역</h2>
+        <!-- 샘플은 들여쓰지 않습니다. 줄 앞 공백도 View의 글자 노드가 되기 때문입니다. -->
+        <div id="real"><section class="sample">
+<h3>할 일</h3>
+<p>오늘 할 일을 <strong>세 개</strong> 적었습니다.</p>
+<ul>
+<li>장보기</li>
+<li>운동</li>
+<li>책 읽기</li>
+</ul>
+<label>메모 <input type="text" value="첫 메모"></label>
+</section></div>
+      </section>
+      <section>
+        <h2>테스트 영역</h2>
+        <textarea id="test" rows="16" spellcheck="false" aria-label="테스트 영역"></textarea>
+        <div class="verify-buttons">
+          <button id="back" type="button">뒤로가기</button>
+          <button id="patch" type="button">Patch</button>
+          <button id="forward" type="button">앞으로가기</button>
+        </div>
+        <p id="message" role="status"></p>
+        <h3>마지막으로 적용한 Patch</h3>
+        <ol id="patch-log"></ol>
+      </section>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
