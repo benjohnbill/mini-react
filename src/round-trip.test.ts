@@ -74,14 +74,14 @@ function createSampleView(): VNode {
   };
 }
 
-describe.skip("VNode에서 DOM을 거쳐 VNode로", () => {
+describe("VNode에서 DOM을 거쳐 VNode로", () => {
   it("R1 태그, 속성, 섞인 자식이 있는 View가 처음과 같은 내용으로 돌아옵니다", () => {
     const element = getElement(createDomFromVNode(createSampleView()));
     expect(createVNodeFromDom(element)).toStrictEqual(createSampleView());
   });
 });
 
-describe.skip("DOM에서 VNode를 거쳐 DOM으로", () => {
+describe("DOM에서 VNode를 거쳐 DOM으로", () => {
   it("T34 내용이 없는 자식 요소가 그대로 돌아옵니다", () => {
     const element = createElementFromHtml("<div><span></span></div>");
     expect(createRoundTripDom(element).isEqualNode(element)).toBe(true);
@@ -110,7 +110,7 @@ describe.skip("DOM에서 VNode를 거쳐 DOM으로", () => {
   });
 });
 
-describe.skip("입력칸 상태", () => {
+describe("입력칸 상태", () => {
   it("R2 value 속성과 친 글자가 다르면 친 글자가 .value로 돌아옵니다", () => {
     const input = createInputFromHtml('<input value="a">');
     input.value = "typed";
@@ -133,7 +133,7 @@ describe.skip("입력칸 상태", () => {
   });
 });
 
-describe.skip("주석", () => {
+describe("주석", () => {
   it("R5 주석은 결과에서만 빠지고, 양옆 글자는 따로 남고, 원본 주석은 그대로입니다", () => {
     const element = createElementFromHtml("<div>a<!--x-->b</div>");
     const node = createRoundTripDom(element);

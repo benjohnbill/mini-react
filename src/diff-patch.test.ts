@@ -46,7 +46,7 @@ function createViewFromContainer(container: Element): VNode {
   return createVNodeFromDom(getViewElement(container));
 }
 
-describe.skip("diffViews → applyPatchesToDom", () => {
+describe("diffViews → applyPatchesToDom", () => {
   describe("새 View에 도달", () => {
     it("I1 글자만 다른 두 View로 고치면 다시 읽은 결과가 새 View와 같습니다", () => {
       const currentView = createElementVNode("div", {}, [
@@ -383,7 +383,7 @@ describe.skip("diffViews → applyPatchesToDom", () => {
   });
 });
 
-describe.skip("createVNodeFromDom → diffViews → applyPatchesToDom", () => {
+describe("createVNodeFromDom → diffViews → applyPatchesToDom", () => {
   it("I11 DOM에서 읽은 두 View로 고치면 빈 글자 노드, 공백, 주석 옆의 대상만 바뀌고 친 글자는 빈 값이 됩니다", () => {
     // 이전 DOM: <div>""," "<!--x-->"a"<span>world</span><input value="initial">(.value "typed")</div>
     const container = document.createElement("div");
