@@ -238,7 +238,7 @@ function countBackStepsToStart(page: Page): number {
   return steps;
 }
 
-describe.skip("I-HR History와 화면 복원", () => {
+describe("I-HR History와 화면 복원", () => {
   it("HR-N01 처음 View를 한 번 저장하고, 첫 Patch 뒤 한 번 뒤로 가면 처음 View로 돌아옵니다", () => {
     const page = createPageFromIndexHtml();
     expect(createDisabledStatesFromButtons(page)).toEqual({

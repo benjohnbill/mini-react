@@ -1,31 +1,47 @@
 import type { VNode } from "./vnode";
 
+// 저장하는 View와 돌려주는 View는 모두 복사본입니다.
+// 밖에서 View를 고쳐도 저장된 이력이 바뀌지 않게 하기 위해서입니다.
 export class StateHistory {
+  #views: VNode[] = [];
+  #currentIndex = -1;
+
   push(view: VNode): void {
-    throw new Error("아직 구현하지 않았습니다");
+    this.#views.splice(this.#currentIndex + 1);
+    this.#views.push(structuredClone(view));
+    this.#currentIndex = this.#views.length - 1;
   }
 
   current(): VNode | null {
-    throw new Error("아직 구현하지 않았습니다");
+    const view = this.#views[this.#currentIndex];
+    return view === undefined ? null : structuredClone(view);
   }
 
   back(): VNode | null {
-    throw new Error("아직 구현하지 않았습니다");
+    if (!this.canBack()) {
+      return null;
+    }
+    this.#currentIndex -= 1;
+    return this.current();
   }
 
   forward(): VNode | null {
-    throw new Error("아직 구현하지 않았습니다");
+    if (!this.canForward()) {
+      return null;
+    }
+    this.#currentIndex += 1;
+    return this.current();
   }
 
   canBack(): boolean {
-    throw new Error("아직 구현하지 않았습니다");
+    return this.#currentIndex > 0;
   }
 
   canForward(): boolean {
-    throw new Error("아직 구현하지 않았습니다");
+    return this.#currentIndex < this.#views.length - 1;
   }
 
   get size(): number {
-    throw new Error("아직 구현하지 않았습니다");
+    return this.#views.length;
   }
 }
