@@ -1,6 +1,13 @@
-// M1 공통 테스트입니다. 동작의 근거는 ADR 0005입니다.
+// M1 공통 테스트입니다. 동작의 근거는 ADR 0005입니다. 왕복 테스트는 round-trip.test.ts에 있습니다.
 import { describe, expect, it } from "vitest";
-import { createDomFromVNode, createVNodeFromDom, type VNode } from "./vnode";
+import {
+  createDomFromVNode,
+  createVNodeFromDom,
+  isTextInput,
+  type VNode,
+} from "./vnode";
+
+const DEEP_NESTING_LEVEL = 500;
 
 function createElementFromHtml(html: string): Element {
   const host = document.createElement("div");
@@ -20,8 +27,20 @@ function createInputFromHtml(html: string): HTMLInputElement {
   return element;
 }
 
-function createRoundTripDom(element: Element): Node {
-  return createDomFromVNode(createVNodeFromDom(element));
+function countNestingLevel(vnode: VNode): number {
+  let level = 0;
+  let current: VNode | undefined = vnode;
+  while (current !== undefined) {
+    if (typeof current === "string") {
+      throw new Error(`Unexpected text at level ${level}: ${current}`);
+    }
+    expect(current.type).toBe("div");
+    expect(current.props).toStrictEqual({});
+    expect(current.children.length).toBeLessThanOrEqual(1);
+    level += 1;
+    current = current.children[0];
+  }
+  return level;
 }
 
 describe("createVNodeFromDom", () => {
@@ -90,6 +109,26 @@ describe("createVNodeFromDom", () => {
         children: ["a", "b"],
       });
     });
+
+    it("T39 주석만 있는 요소는 빈 children으로 읽습니다", () => {
+      expect(
+        createVNodeFromDom(createElementFromHtml("<div><!-- 메모 --></div>")),
+      ).toStrictEqual({
+        type: "div",
+        props: {},
+        children: [],
+      });
+    });
+
+    it("T40 대문자로 적은 태그를 소문자 type으로 읽습니다", () => {
+      expect(
+        createVNodeFromDom(createElementFromHtml("<DIV><SPAN>x</SPAN></DIV>")),
+      ).toStrictEqual({
+        type: "div",
+        props: {},
+        children: [{ type: "span", props: {}, children: ["x"] }],
+      });
+    });
   });
 
   describe("속성", () => {
@@ -120,6 +159,16 @@ describe("createVNodeFromDom", () => {
       ).toStrictEqual({
         type: "div",
         props: { hidden: "" },
+        children: [],
+      });
+    });
+
+    it("T41 입력칸의 값 없는 속성도 빈 값으로 읽고 value를 함께 넣습니다", () => {
+      expect(
+        createVNodeFromDom(createInputFromHtml("<input disabled>")),
+      ).toStrictEqual({
+        type: "input",
+        props: { disabled: "", value: "" },
         children: [],
       });
     });
@@ -163,6 +212,34 @@ describe("createVNodeFromDom", () => {
         children: [{ type: "span", props: {}, children: [] }],
       });
     });
+
+    it("T42 형제 요소를 DOM 순서대로 읽습니다", () => {
+      expect(
+        createVNodeFromDom(
+          createElementFromHtml("<ul><li>a</li><li>b</li></ul>"),
+        ),
+      ).toStrictEqual({
+        type: "ul",
+        props: {},
+        children: [
+          { type: "li", props: {}, children: ["a"] },
+          { type: "li", props: {}, children: ["b"] },
+        ],
+      });
+    });
+
+    it("T43 500단계로 겹친 div를 오류 없이 끝까지 읽습니다", () => {
+      const root = document.createElement("div");
+      let deepest = root;
+      for (let level = 1; level < DEEP_NESTING_LEVEL; level += 1) {
+        const child = document.createElement("div");
+        deepest.append(child);
+        deepest = child;
+      }
+      expect(countNestingLevel(createVNodeFromDom(root))).toBe(
+        DEEP_NESTING_LEVEL,
+      );
+    });
   });
 
   describe("글자", () => {
@@ -201,6 +278,35 @@ describe("createVNodeFromDom", () => {
         type: "p",
         props: {},
         children: ["", { type: "b", props: {}, children: ["x"] }],
+      });
+    });
+
+    it("T44 줄바꿈과 들여쓰기만 있는 글자 노드도 버리지 않습니다", () => {
+      const element = createElementFromHtml(
+        "<ul>\n  <li>a</li>\n  <li>b</li>\n</ul>",
+      );
+      expect(createVNodeFromDom(element)).toStrictEqual({
+        type: "ul",
+        props: {},
+        children: [
+          "\n  ",
+          { type: "li", props: {}, children: ["a"] },
+          "\n  ",
+          { type: "li", props: {}, children: ["b"] },
+          "\n",
+        ],
+      });
+    });
+
+    it("T45 pre 안의 들여쓰기와 줄바꿈을 그대로 읽습니다", () => {
+      expect(
+        createVNodeFromDom(
+          createElementFromHtml("<pre>  if (a) {\n    b();\n  }\n</pre>"),
+        ),
+      ).toStrictEqual({
+        type: "pre",
+        props: {},
+        children: ["  if (a) {\n    b();\n  }\n"],
       });
     });
   });
@@ -270,6 +376,52 @@ describe("createVNodeFromDom", () => {
         props: { value: "" },
         children: [],
       });
+    });
+
+    it("T46 입력칸이 아닌 요소에 적힌 value 속성은 속성 그대로 읽습니다", () => {
+      const element = createElementFromHtml(
+        '<ol><li value="3">x</li><li><button value="go">y</button></li></ol>',
+      );
+      expect(createVNodeFromDom(element)).toStrictEqual({
+        type: "ol",
+        props: {},
+        children: [
+          { type: "li", props: { value: "3" }, children: ["x"] },
+          {
+            type: "li",
+            props: {},
+            children: [
+              { type: "button", props: { value: "go" }, children: ["y"] },
+            ],
+          },
+        ],
+      });
+    });
+  });
+
+  describe("입력 보존", () => {
+    it("T47 읽은 뒤에도 자식 노드, 글자, 주석, 속성, 친 글자를 바꾸지 않습니다", () => {
+      const element = createElementFromHtml(
+        '<div id="a">hello<!-- 설명 --><input value="a"></div>',
+      );
+      const [text, comment, input] = element.childNodes;
+      if (!(input instanceof HTMLInputElement)) {
+        throw new Error("Fixture has no input");
+      }
+      input.value = "typed";
+
+      createVNodeFromDom(element);
+
+      expect(element.childNodes.length).toBe(3);
+      expect(element.childNodes[0]).toBe(text);
+      expect(element.childNodes[1]).toBe(comment);
+      expect(element.childNodes[2]).toBe(input);
+      expect(text?.textContent).toBe("hello");
+      expect(comment?.nodeType).toBe(Node.COMMENT_NODE);
+      expect(comment?.textContent).toBe(" 설명 ");
+      expect(element.getAttribute("id")).toBe("a");
+      expect(input.getAttribute("value")).toBe("a");
+      expect(input.value).toBe("typed");
     });
   });
 });
@@ -401,35 +553,94 @@ describe("createDomFromVNode", () => {
     expect(node).toBeInstanceOf(HTMLInputElement);
     expect((node as HTMLInputElement).value).toBe("x");
   });
+
+  it("T48 형제 요소를 적힌 순서대로 만듭니다", () => {
+    const node = createDomFromVNode({
+      type: "ul",
+      props: {},
+      children: [
+        { type: "li", props: {}, children: ["a"] },
+        { type: "li", props: {}, children: ["b"] },
+        { type: "li", props: {}, children: ["c"] },
+      ],
+    });
+    expect(
+      node.isEqualNode(
+        createElementFromHtml("<ul><li>a</li><li>b</li><li>c</li></ul>"),
+      ),
+    ).toBe(true);
+  });
+
+  it("T49 만든 뒤에도 입력 VNode를 바꾸지 않습니다", () => {
+    const vnode: VNode = {
+      type: "div",
+      props: { id: "a" },
+      children: [
+        "hello",
+        { type: "input", props: { value: "x" }, children: [] },
+        {
+          type: "ul",
+          props: {},
+          children: [{ type: "li", props: {}, children: ["b"] }],
+        },
+      ],
+    };
+    createDomFromVNode(vnode);
+    expect(vnode).toStrictEqual({
+      type: "div",
+      props: { id: "a" },
+      children: [
+        "hello",
+        { type: "input", props: { value: "x" }, children: [] },
+        {
+          type: "ul",
+          props: {},
+          children: [{ type: "li", props: {}, children: ["b"] }],
+        },
+      ],
+    });
+  });
+
+  it("T50 같은 VNode로 두 번 만들면 서로 다른 노드를 돌려줍니다", () => {
+    const vnode: VNode = {
+      type: "p",
+      props: {},
+      children: ["one", { type: "b", props: {}, children: ["two"] }],
+    };
+    const first = createDomFromVNode(vnode);
+    const second = createDomFromVNode(vnode);
+    expect(second).not.toBe(first);
+    expect(second.childNodes[0]).not.toBe(first.childNodes[0]);
+    expect(second.childNodes[1]).not.toBe(first.childNodes[1]);
+
+    first.childNodes[0]?.remove();
+    expect(
+      second.isEqualNode(createElementFromHtml("<p>one<b>two</b></p>")),
+    ).toBe(true);
+  });
 });
 
-describe("왕복", () => {
-  it("T34 내용이 없는 자식 요소가 그대로 돌아옵니다", () => {
-    const element = createElementFromHtml("<div><span></span></div>");
-    expect(createRoundTripDom(element).isEqualNode(element)).toBe(true);
-  });
-
-  it("T35 글자와 요소가 섞인 한글 문장이 그대로 돌아옵니다", () => {
-    const element = createElementFromHtml(
-      "<p>안녕 <strong>React</strong> 반가워!</p>",
+describe("isTextInput", () => {
+  it("T51 type이 없거나 text인 input은 입력칸입니다", () => {
+    expect(isTextInput(createElementFromHtml("<input>"))).toBe(true);
+    expect(isTextInput(createElementFromHtml('<input type="text">'))).toBe(
+      true,
     );
-    expect(createRoundTripDom(element).isEqualNode(element)).toBe(true);
   });
 
-  it("T36 공백, 한글, 특수문자가 그대로 돌아옵니다", () => {
-    const element = createElementFromHtml(
-      "<p>   안녕하세요 &amp; 반갑습니다! &lt;React&gt;    </p>",
+  it("T52 checkbox와 radio는 입력칸이 아닙니다", () => {
+    expect(isTextInput(createElementFromHtml('<input type="checkbox">'))).toBe(
+      false,
     );
-    expect(createRoundTripDom(element).isEqualNode(element)).toBe(true);
+    expect(isTextInput(createElementFromHtml('<input type="radio">'))).toBe(
+      false,
+    );
   });
 
-  it("T37 친 글자가 .value로 돌아옵니다", () => {
-    const input = createInputFromHtml("<input>");
-    input.value = "typed";
-    const node = createRoundTripDom(input);
-    expect(node).toBeInstanceOf(HTMLInputElement);
-    expect((node as HTMLInputElement).value).toBe("typed");
+  it("T53 .value가 있어도 input이 아닌 li와 button은 입력칸이 아닙니다", () => {
+    expect(isTextInput(createElementFromHtml("<li>x</li>"))).toBe(false);
+    expect(isTextInput(createElementFromHtml("<button>y</button>"))).toBe(
+      false,
+    );
   });
-
-  it.todo("T38 M2-M3: 주석이 섞여 있어도 올바른 노드를 고칩니다");
 });
