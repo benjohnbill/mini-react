@@ -8,7 +8,7 @@
     "build": "vite build",
     "typecheck": "tsc",
     "test": "vitest run",
-    "check": "biome check .",
+    "check": "biome check . && node scripts/check-decision-links.mjs",
     "format": "biome check --write ."
   },
   "devDependencies": {
