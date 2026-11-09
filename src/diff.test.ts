@@ -3,12 +3,26 @@ import { describe, expect, it } from "vitest";
 import { diffViews } from "./diff";
 import type { VNode } from "./vnode";
 
+type ElementVNode = Exclude<VNode, string>;
+
 function createElementVNode(
   type: string,
   props: Record<string, string>,
   children: VNode[],
 ): VNode {
   return { type, props, children };
+}
+
+function freezeVNodeDeeply(vnode: VNode): void {
+  if (typeof vnode === "string") {
+    return;
+  }
+  Object.freeze(vnode.props);
+  for (const child of vnode.children) {
+    freezeVNodeDeeply(child);
+  }
+  Object.freeze(vnode.children);
+  Object.freeze(vnode);
 }
 
 function createListVNode(items: string[]): VNode {
@@ -433,24 +447,95 @@ describe("diffViews", () => {
         { type: "REPLACE", path: [2], node: newSection },
       ]);
     });
+
+    it("D39 속성 추가, 글자 변경, 깊은 INSERT, 끝 REMOVE가 섞여도 바뀐 곳만 순서대로 돌려줍니다", () => {
+      // old: <div><section id="left"><p>a</p><p>b</p><p>c</p></section><aside>s</aside></div>
+      // new: <div><section id="left" class="active"><p>A<b>new</b></p><p>b</p></section><aside>s</aside></div>
+      const currentView = createElementVNode("div", {}, [
+        createElementVNode("section", { id: "left" }, [
+          createElementVNode("p", {}, ["a"]),
+          createElementVNode("p", {}, ["b"]),
+          createElementVNode("p", {}, ["c"]),
+        ]),
+        createElementVNode("aside", {}, ["s"]),
+      ]);
+      const newBold = createElementVNode("b", {}, ["new"]);
+      const newView = createElementVNode("div", {}, [
+        createElementVNode("section", { id: "left", class: "active" }, [
+          createElementVNode("p", {}, ["A", newBold]),
+          createElementVNode("p", {}, ["b"]),
+        ]),
+        createElementVNode("aside", {}, ["s"]),
+      ]);
+      expect(diffViews(currentView, newView)).toStrictEqual([
+        { type: "PROPS", path: [0], set: { class: "active" }, remove: [] },
+        { type: "TEXT", path: [0, 0, 0], text: "A" },
+        { type: "INSERT", path: [0, 0, 1], node: newBold },
+        { type: "REMOVE", path: [0, 2] },
+      ]);
+    });
   });
 
   describe("입력", () => {
-    it("D36 두 View를 바꾸지 않습니다", () => {
-      const currentView = createElementVNode("div", { id: "a" }, [
-        createListVNode(["a", "b", "c"]),
-        createElementVNode("p", {}, ["x"]),
-      ]);
-      const newView = createElementVNode("div", { class: "b" }, [
-        createListVNode(["a"]),
-        createElementVNode("span", {}, ["y"]),
-        "z",
-      ]);
+    it("D36 두 View의 내용과 안쪽 객체의 참조를 바꾸지 않습니다", () => {
+      const sharedParagraph = createElementVNode("p", {}, ["x"]);
+      const currentList: ElementVNode = {
+        type: "ul",
+        props: {},
+        children: ["a", "b", "c"].map((item) =>
+          createElementVNode("li", {}, [item]),
+        ),
+      };
+      const currentView: ElementVNode = {
+        type: "div",
+        props: { id: "a" },
+        children: [currentList, sharedParagraph],
+      };
+      const newList: ElementVNode = {
+        type: "ul",
+        props: {},
+        children: [createElementVNode("li", {}, ["a"])],
+      };
+      const newView: ElementVNode = {
+        type: "div",
+        props: { class: "b" },
+        children: [
+          newList,
+          sharedParagraph,
+          createElementVNode("span", {}, ["y"]),
+          "z",
+        ],
+      };
+      const currentProps = currentView.props;
+      const currentChildren = currentView.children;
+      const currentListChildren = currentList.children;
+      const currentFirstItem = currentList.children[0];
+      const newProps = newView.props;
+      const newChildren = newView.children;
+      const newListChildren = newList.children;
+      const newFirstItem = newList.children[0];
       const currentCopy = structuredClone(currentView);
       const newCopy = structuredClone(newView);
+      // 얼린 입력에 쓰면 엄격 모드에서 TypeError가 나므로, 호출 중의 변경도 드러납니다.
+      freezeVNodeDeeply(currentView);
+      freezeVNodeDeeply(newView);
+
       diffViews(currentView, newView);
+
       expect(currentView).toStrictEqual(currentCopy);
       expect(newView).toStrictEqual(newCopy);
+      expect(currentView.props).toBe(currentProps);
+      expect(currentView.children).toBe(currentChildren);
+      expect(currentView.children[0]).toBe(currentList);
+      expect(currentView.children[1]).toBe(sharedParagraph);
+      expect(currentList.children).toBe(currentListChildren);
+      expect(currentList.children[0]).toBe(currentFirstItem);
+      expect(newView.props).toBe(newProps);
+      expect(newView.children).toBe(newChildren);
+      expect(newView.children[0]).toBe(newList);
+      expect(newView.children[1]).toBe(sharedParagraph);
+      expect(newList.children).toBe(newListChildren);
+      expect(newList.children[0]).toBe(newFirstItem);
     });
 
     it("D37 앞의 호출이 돌려준 Patch는 다음 호출로 바뀌거나 쌓이지 않습니다", () => {
