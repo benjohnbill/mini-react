@@ -167,7 +167,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe.skip("검증 페이지", () => {
+describe("검증 페이지", () => {
   describe("F-INIT 처음 표시", () => {
     it("V70 verify-layout 실제 영역, 테스트 영역, 세 버튼, 안내, Patch 목록이 있습니다", () => {
       const page = createPageFromIndexHtml();

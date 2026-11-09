@@ -1,28 +1,27 @@
 import type { VNode } from "./vnode";
 
+// 저장하는 View와 돌려주는 View는 모두 복사본입니다.
+// 밖에서 View를 고쳐도 저장된 이력이 바뀌지 않게 하기 위해서입니다.
 export class StateHistory {
-  private views: VNode[] = [];
-  private position = -1;
+  #views: VNode[] = [];
+  #currentIndex = -1;
 
   push(view: VNode): void {
-    this.views.length = this.position + 1;
-    this.views.push(structuredClone(view));
-    this.position = this.views.length - 1;
+    this.#views.splice(this.#currentIndex + 1);
+    this.#views.push(structuredClone(view));
+    this.#currentIndex = this.#views.length - 1;
   }
 
   current(): VNode | null {
-    const view = this.views[this.position];
-    if (view === undefined) {
-      return null;
-    }
-    return structuredClone(view);
+    const view = this.#views[this.#currentIndex];
+    return view === undefined ? null : structuredClone(view);
   }
 
   back(): VNode | null {
     if (!this.canBack()) {
       return null;
     }
-    this.position -= 1;
+    this.#currentIndex -= 1;
     return this.current();
   }
 
@@ -30,19 +29,19 @@ export class StateHistory {
     if (!this.canForward()) {
       return null;
     }
-    this.position += 1;
+    this.#currentIndex += 1;
     return this.current();
   }
 
   canBack(): boolean {
-    return this.position > 0;
+    return this.#currentIndex > 0;
   }
 
   canForward(): boolean {
-    return this.position < this.views.length - 1;
+    return this.#currentIndex < this.#views.length - 1;
   }
 
   get size(): number {
-    return this.views.length;
+    return this.#views.length;
   }
 }

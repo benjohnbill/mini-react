@@ -6,10 +6,9 @@ export function createDomFromVNode(vnode: VNode): Node {
   if (typeof vnode === "string") {
     return document.createTextNode(vnode);
   }
-
-  const element: HTMLElement = document.createElement(vnode.type);
-  for (const [name, value] of Object.entries(vnode.props)) {
-    element.setAttribute(name, value);
+  const element = document.createElement(vnode.type);
+  for (const [key, value] of Object.entries(vnode.props)) {
+    element.setAttribute(key, value);
   }
   for (const child of vnode.children) {
     element.append(createDomFromVNode(child));
@@ -18,21 +17,23 @@ export function createDomFromVNode(vnode: VNode): Node {
   return element;
 }
 
-export function createVNodeFromDom(element: Text | Element): VNode {
-  if (element instanceof Text) {
-    return element.data;
+export function createVNodeFromDom(element: Element): VNode {
+  const children: VNode[] = [];
+  for (const child of element.childNodes) {
+    if (child instanceof Text) {
+      children.push(child.data);
+    } else if (child instanceof Element) {
+      children.push(createVNodeFromDom(child));
+    }
   }
 
-  return {
+  const vnode: VNode = {
     type: element.localName,
     props: createPropsFromElement(element),
-    children: Array.from(element.childNodes)
-      .filter(
-        (child): child is Text | Element =>
-          child instanceof Text || child instanceof Element,
-      )
-      .map(createVNodeFromDom),
+    children,
   };
+
+  return vnode;
 }
 
 function createPropsFromElement(element: Element): Record<string, string> {
@@ -46,11 +47,11 @@ function createPropsFromElement(element: Element): Record<string, string> {
   return props;
 }
 
-const NON_TEXT_INPUT_TYPES = ["checkbox", "radio", "file"];
-
 export function isTextInput(element: Element): element is HTMLInputElement {
   return (
     element instanceof HTMLInputElement &&
-    !NON_TEXT_INPUT_TYPES.includes(element.type)
+    element.type !== "checkbox" &&
+    element.type !== "radio" &&
+    element.type !== "file"
   );
 }

@@ -21,146 +21,108 @@ export function applyPatchesToDom(container: Element, patches: Patch[]): void {
 
 function applyPatchToDom(container: Element, patch: Patch): void {
   switch (patch.type) {
-    case "TEXT": {
-      const node = findNode(container, patch.path);
-      if (node === undefined) {
-        throw new Error(`Node not found: ${createPathLabel(patch.path)}`);
-      }
-      if (!(node instanceof Text)) {
-        throw new Error(
-          `TEXT patch path is not a text node: ${createPathLabel(patch.path)}`,
-        );
-      }
-      node.data = patch.text;
+    case "TEXT":
+      applyTextToNode(getNodeByPath(container, patch.path), patch);
       return;
-    }
-
-    case "REPLACE": {
-      const node = findNode(container, patch.path);
-      if (node === undefined) {
-        throw new Error(`Node not found: ${createPathLabel(patch.path)}`);
-      }
-      node.parentNode?.replaceChild(createDomFromVNode(patch.node), node);
-      return;
-    }
-
-    case "PROPS": {
-      const node = findNode(container, patch.path);
-      if (node === undefined) {
-        throw new Error(`Node not found: ${createPathLabel(patch.path)}`);
-      }
-      if (!(node instanceof Element)) {
-        throw new Error(
-          `PROPS patch path is not an element: ${createPathLabel(patch.path)}`,
-        );
-      }
-      applyPropsToElement(node, patch.set, patch.remove);
-      return;
-    }
-
-    case "INSERT": {
-      if (patch.path.length === 0) {
-        throw new Error(
-          `INSERT patch has no insertion index: ${createPathLabel(patch.path)}`,
-        );
-      }
-      const index = patch.path[patch.path.length - 1];
-      if (index === undefined) {
-        return;
-      }
-      const parent = findNode(container, patch.path.slice(0, -1));
-      if (parent === undefined) {
-        throw new Error(
-          `Parent node not found: ${createPathLabel(patch.path)}`,
-        );
-      }
-      if (!(parent instanceof Element)) {
-        throw new Error(
-          `INSERT patch parent is not an element: ${createPathLabel(patch.path)}`,
-        );
-      }
-      if (index > countCountableChildren(parent)) {
-        throw new Error(
-          `INSERT patch index is out of range: ${createPathLabel(patch.path)}`,
-        );
-      }
-      parent.insertBefore(
+    case "REPLACE":
+      getNodeByPath(container, patch.path).replaceWith(
         createDomFromVNode(patch.node),
-        findCountableChild(parent, index) ?? null,
       );
       return;
-    }
-
-    case "REMOVE": {
-      const node = findNode(container, patch.path);
-      if (node === undefined) {
-        throw new Error(`Node not found: ${createPathLabel(patch.path)}`);
-      }
-      node.parentNode?.removeChild(node);
+    case "PROPS":
+      applyPropsToNode(getNodeByPath(container, patch.path), patch);
       return;
-    }
+    case "INSERT":
+      applyInsertToContainer(container, patch);
+      return;
+    case "REMOVE":
+      getNodeByPath(container, patch.path).remove();
+      return;
   }
 }
 
-function applyPropsToElement(
-  element: Element,
-  set: Record<string, string>,
-  remove: string[],
+function applyTextToNode(
+  node: ChildNode,
+  patch: Extract<Patch, { type: "TEXT" }>,
 ): void {
-  for (const name of remove) {
-    element.removeAttribute(name);
+  if (!(node instanceof Text)) {
+    throw new Error(
+      `TEXT path ${createPathText(patch.path)} is not a text node`,
+    );
   }
-  for (const [name, value] of Object.entries(set)) {
-    if (name !== "value") {
-      element.setAttribute(name, value);
+  node.data = patch.text;
+}
+
+function applyPropsToNode(
+  node: ChildNode,
+  patch: Extract<Patch, { type: "PROPS" }>,
+): void {
+  if (!(node instanceof Element)) {
+    throw new Error(
+      `PROPS path ${createPathText(patch.path)} is not an element`,
+    );
+  }
+  for (const [name, value] of Object.entries(patch.set)) {
+    // ADR 0005: 입력칸의 props.value는 value 속성이 아니라 .value입니다.
+    if (name === "value" && isTextInput(node)) {
+      node.value = value;
+    } else {
+      node.setAttribute(name, value);
     }
   }
-  const value = set.value;
-  if (value === undefined) {
-    return;
-  }
-  if (isTextInput(element)) {
-    element.value = value;
-  } else {
-    element.setAttribute("value", value);
+  for (const name of patch.remove) {
+    node.removeAttribute(name);
   }
 }
 
-function findNode(container: Element, path: number[]): Node | undefined {
-  let node: Node | undefined = findCountableChild(container, 0);
+function applyInsertToContainer(
+  container: Element,
+  patch: Extract<Patch, { type: "INSERT" }>,
+): void {
+  const parentPath = patch.path.slice(0, -1);
+  const index = patch.path.at(-1);
+  if (index === undefined) {
+    throw new Error("INSERT path [] has no position");
+  }
+  const parent = getNodeByPath(container, parentPath);
+  const children = createChildListFromNode(parent);
+  if (index > children.length) {
+    throw new Error(
+      `INSERT path ${createPathText(patch.path)} is out of range`,
+    );
+  }
+  // 주석은 세지 않으므로, 기준은 childNodes가 아니라 번호가 맞는 자식입니다.
+  parent.insertBefore(createDomFromVNode(patch.node), children[index] ?? null);
+}
+
+// container의 자식 목록에서 View는 0번이므로, 0번부터 내려갑니다.
+function getNodeByPath(container: Element, path: number[]): ChildNode {
+  let node = getChildByIndex(container, 0, path);
   for (const index of path) {
-    if (!(node instanceof Element)) {
-      return undefined;
-    }
-    node = findCountableChild(node, index);
+    node = getChildByIndex(node, index, path);
   }
   return node;
 }
 
-function findCountableChild(parent: Element, index: number): Node | undefined {
-  let count = 0;
-  for (const child of parent.childNodes) {
-    if (!(child instanceof Text || child instanceof Element)) {
-      continue;
-    }
-    if (count === index) {
-      return child;
-    }
-    count += 1;
+function getChildByIndex(
+  parent: Node,
+  index: number,
+  path: number[],
+): ChildNode {
+  const child = createChildListFromNode(parent)[index];
+  if (child === undefined) {
+    throw new Error(`Patch path ${createPathText(path)} has no node`);
   }
-  return undefined;
+  return child;
 }
 
-function countCountableChildren(parent: Element): number {
-  let count = 0;
-  for (const child of parent.childNodes) {
-    if (child instanceof Text || child instanceof Element) {
-      count += 1;
-    }
-  }
-  return count;
+// ADR 0005: VNode의 children은 글자와 요소만 담으므로, 번호도 그 둘로만 셉니다.
+function createChildListFromNode(node: Node): ChildNode[] {
+  return [...node.childNodes].filter(
+    (child) => child instanceof Text || child instanceof Element,
+  );
 }
 
-function createPathLabel(path: number[]): string {
+function createPathText(path: number[]): string {
   return `[${path.join(", ")}]`;
 }
