@@ -47,7 +47,7 @@ function createPropsFromElement(element: Element): Record<string, string> {
   return props;
 }
 
-function isTextInput(element: Element): element is HTMLInputElement {
+export function isTextInput(element: Element): element is HTMLInputElement {
   return (
     element instanceof HTMLInputElement &&
     element.type !== "checkbox" &&
