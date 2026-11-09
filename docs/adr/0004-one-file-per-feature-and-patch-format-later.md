@@ -17,7 +17,9 @@ applyPatchesToDom(container: Element, patches: Patch[]): void
 
 이름은 확정입니다. 매개변수와 반환 타입은 `Patch` 형식을 정할 때 바뀔 수 있습니다.
 
-`createVNodeFromDom`은 글자를 공백까지 유지하고 HTML 주석 노드만 버립니다. 입력칸은 `.value`를 읽어 `props.value`에 담습니다. 공백을 지우면 `<b>a</b> <i>b</i>`의 띄어쓰기가 사라지고, 사용자가 친 글자는 속성에 없기 때문입니다.
+`createVNodeFromDom`과 `createDomFromVNode`의 변환 규칙은 [ADR 0005](0005-dom-and-vnode-conversion-rules.md)에 있습니다.
+
+`Patch`의 형식과 `path`의 기준은 [ADR 0006](0006-patch-format-and-path.md)에 있습니다. 형식을 정하면서 위의 시그니처는 바뀌지 않았습니다.
 
 ## 고려한 대안
 
@@ -29,7 +31,7 @@ applyPatchesToDom(container: Element, patches: Patch[]): void
 
 ## 결과
 
-- 빈 함수를 `main`에 올릴 때 `Patch`는 `export type Patch = unknown;`으로 둡니다. 빈 함수 상태의 페이지는 `Patch`를 넘기기만 하므로 형식이 없어도 됩니다.
+- 빈 함수를 `main`에 올릴 때 `Patch`는 `export type Patch = unknown;`으로 둡니다. 빈 함수 상태의 페이지는 `Patch`를 넘기기만 하므로 형식이 없어도 됩니다. ADR 0006이 형식을 정하면서 이 단계는 끝났습니다.
 - 형식이 정해질 때까지 `diffViews`와 `applyPatchesToDom`은 한 사람이 자기 브랜치에서 함께 채웁니다. 각자의 형식이 다르면 `Patch` 줄에서 병합 충돌이 나고, 팀이 남길 쪽을 그때 정합니다.
 - 세 Hook을 다른 사람이 맡으면 `function-component.ts`에서 충돌이 날 수 있습니다.
 - Biome `noImportCycles`는 양쪽 모두 값을 가져오는 순환만 잡습니다. 한쪽이라도 `import type`인 순환과 잘못된 방향은 리뷰에서 봅니다.
