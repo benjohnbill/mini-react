@@ -20,7 +20,7 @@ status: proposed
 
 ## 입력칸
 
-입력칸은 `<input>` 중 `checkbox`와 `radio`를 뺀 것입니다. 사용자가 친 글자는 `value` 속성이 아니라 `.value`에 있으므로, `createVNodeFromDom`은 `.value`를 읽어 `props.value`에 담습니다. `props.value`는 언제나 `.value`를 뜻하고, 값이 `""`여도 넣습니다. 빈 값을 생략하면 Diff가 속성을 지우는 Patch를 만드는데, 이미 값이 바뀐 입력칸에서는 속성을 지워도 `.value`가 따라가지 않습니다.
+입력칸은 `<input>` 중 `checkbox`, `radio`, `file`을 뺀 것입니다. 사용자가 친 글자는 `value` 속성이 아니라 `.value`에 있으므로, `createVNodeFromDom`은 `.value`를 읽어 `props.value`에 담습니다. `props.value`는 언제나 `.value`를 뜻하고, 값이 `""`여도 넣습니다. 빈 값을 생략하면 Diff가 속성을 지우는 Patch를 만드는데, 이미 값이 바뀐 입력칸에서는 속성을 지워도 `.value`가 따라가지 않습니다.
 
 `li`, `button`처럼 `.value`를 갖지만 입력칸이 아닌 요소는 `.value`를 읽지 않습니다. `li`의 `.value`는 목록의 번호입니다.
 
@@ -34,7 +34,8 @@ status: proposed
 
 - 아무것도 치지 않은 `<input>`을 왕복하면 `<input value="">`가 되어, 원본과 `isEqualNode`로 비교하면 `false`입니다. 입력칸의 왕복 테스트는 `.value`로 비교합니다. `isEqualNode`는 `.value`를 보지 못합니다.
 - 주석이 든 DOM은 왕복하면 주석이 사라지므로 왕복 테스트에 쓰지 않습니다.
+- `createVNodeFromDom`은 요소만 받습니다(ADR 0004의 시그니처). 글자나 주석 노드 하나를 루트로 읽는 경우는 다루지 않고, 요소의 자식으로 읽는 경우만 검사합니다.
 - 다음은 다루지 않습니다.
-  - `textarea`, `select`, `checkbox`, `radio`: 지금 상태가 `.value` 하나에 있지 않습니다. `textarea`는 자식 글자가 처음 값으로 남고, `select`는 `selected` 속성이 처음 고른 항목으로 남고, `checkbox`와 `radio`는 상태가 `.checked`에 있습니다. 각자 전용 규칙이 필요합니다.
+  - `textarea`, `select`, `checkbox`, `radio`, `file`: 지금 상태가 `.value` 하나에 있지 않습니다. `textarea`는 자식 글자가 처음 값으로 남고, `select`는 `selected` 속성이 처음 고른 항목으로 남고, `checkbox`와 `radio`는 상태가 `.checked`에 있습니다. `file`은 상태가 고른 파일 목록에 있고, 스크립트가 `.value`에 글자를 쓰면 `InvalidStateError`가 납니다. 각자 전용 규칙이 필요합니다.
   - SVG: 이름공간을 따로 다뤄야 합니다. HTML 이름공간으로 만들면 `viewBox` 같은 속성의 대소문자가 사라집니다.
   - `<template>`: 내용이 `childNodes`가 아니라 `content`에 있어서, 읽으면 자식이 비어 보입니다.

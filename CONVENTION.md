@@ -27,10 +27,10 @@
 
 ```text
 src/
-├── vnode.ts               VNode, createVNodeFromDom, createDomFromVNode
+├── vnode.ts               VNode, createVNodeFromDom, createDomFromVNode, isTextInput
 ├── patch.ts               Patch, applyPatchesToDom
 ├── diff.ts                diffViews
-├── history.ts             State History
+├── history.ts             StateHistory
 ├── function-component.ts  FunctionComponent, useState, useEffect, useMemo
 ├── main.ts                시작 코드
 └── test-pages/
@@ -56,7 +56,6 @@ src/
 
 - 공통 테스트는 구현 전에 PR로 `main`에 넣습니다. 함수가 비어 있는 동안 그 함수의 테스트는 건너뜁니다.
 - 공통 테스트가 다루지 않는 입력이나 동작을 구현하면, 그 구현 PR에 테스트를 함께 넣습니다.
-- `Patch` 형식이 정해지기 전에는 테스트에서 `Patch`의 내용을 읽지 않습니다.
 - 테스트는 내보낸 함수를 호출해 동작을 확인합니다. 테스트만을 위해 함수를 내보내지 않습니다.
 - 기대값은 검사 대상 함수로 계산하지 않고 직접 적습니다. `diffViews`와 `applyPatchesToDom`으로 고친 DOM을 `createDomFromVNode`의 결과와 비교하는 것처럼, 다른 내보낸 함수의 결과와 비교할 수는 있습니다.
 
@@ -100,8 +99,14 @@ applyPatchesToDom(container, patches);
 | `apply` | 변경을 대상에 반영합니다 |
 | `diff` | 두 값을 비교해 차이를 돌려줍니다 |
 | `find` | 찾습니다. 없으면 `undefined`를 돌려줍니다 |
+| `get` | 찾습니다. 없으면 `Error`를 던집니다 |
 | `is`, `has` | 참과 거짓을 묻습니다. `boolean`을 돌려줍니다 |
+| `can` | 할 수 있는지 묻습니다. `boolean`을 돌려줍니다 |
+| `push` | 목록의 끝에 더합니다 |
+| `start` | 페이지의 처음 상태를 만들고 이벤트를 연결합니다. 값을 돌려주지 않습니다 |
+| `back`, `forward` | 이력에서 한 칸 옮기고 그 자리의 값을 돌려줍니다. 옮길 수 없으면 `null`을 돌려줍니다 |
 
+- `StateHistory`의 메서드는 브라우저 History와 팀 테스트 시트의 이름(`push`, `back`, `forward`, `current`, `canBack`, `canForward`, `size`)을 씁니다. `current`와 `size`는 값을 묻는 이름이라 동사를 붙이지 않습니다.
 - 변환 함수는 `create<결과>From<입력>`으로 짓습니다. 비교 방식 같은 구현은 이름에 넣지 않습니다.
 - 변수는 명사로 짓고, 쓰이는 범위가 넓을수록 길게 짓습니다.
 - 숫자 상수에는 이름을 붙입니다.
