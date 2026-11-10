@@ -11,8 +11,7 @@ Status: active
 npm ci             # 도구 설치 (Node 버전: .nvmrc)
 npm run dev        # 데모 페이지 실행
 npm run typecheck  # 타입 검사
-npm run check      # 포맷과 린트 검사
-npm run format     # 포맷과 린트 자동 수정
+npm run check      # 포맷, 린트, ADR이 인용한 테스트 ID 검사 (자동 수정: npm run format)
 npm test           # 단위 테스트
 npm run build      # 빌드
 ```
