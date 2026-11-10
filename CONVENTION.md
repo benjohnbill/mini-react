@@ -1,6 +1,6 @@
 # 팀 규칙
 
-1. **브랜치:** `main`은 PR로만 변경합니다. 개인 브랜치는 이니셜로 만들고 병합 후에도 유지합니다. 임시 feature 브랜치는 개인 브랜치끼리 먼저 합칠 때만 만듭니다. 이유는 [ADR 0001](docs/adr/0001-personal-branches-no-forks.md)에 있습니다. 다른 PR의 브랜치를 base로 쌓은 PR은, 아래쪽 PR이 병합되면 `retarget-stacked-prs` workflow가 base를 병합 대상으로 옮깁니다.
+1. **브랜치:** `main`은 PR로만 변경합니다. 개인 브랜치는 이니셜로 만들고 병합 후에도 유지합니다. 임시 feature 브랜치는 개인 브랜치끼리 먼저 합칠 때만 만듭니다. 이유는 [personal-branches-no-forks](docs/adr/team/personal-branches-no-forks.md)에 있습니다. 다른 PR의 브랜치를 base로 쌓은 PR은, 아래쪽 PR이 병합되면 `retarget-stacked-prs` workflow가 base를 병합 대상으로 옮깁니다.
 2. **PR 전:** `main`의 최신 내용을 개인 브랜치에 반영합니다.
 
    ```bash
@@ -23,7 +23,7 @@
 
 ## 모듈 구조
 
-폴더 없이 `src/`에 기능당 파일 하나를 둡니다. 이유는 [ADR 0004](docs/adr/0004-one-file-per-feature-and-patch-format-later.md)에 있습니다.
+폴더 없이 `src/`에 기능당 파일 하나를 둡니다. 이유는 [one-file-per-feature-no-folders](docs/adr/team/one-file-per-feature-no-folders.md)에 있습니다.
 
 ```text
 src/
@@ -56,12 +56,13 @@ src/
 
 - 공통 테스트는 구현 전에 PR로 `main`에 넣습니다. 함수가 비어 있는 동안 그 함수의 테스트는 건너뜁니다.
 - 공통 테스트가 다루지 않는 입력이나 동작을 구현하면, 그 구현 PR에 테스트를 함께 넣습니다.
+- `it.todo`는 곧 쓸 테스트에만 씁니다. 결정하지 못한 경우는 ADR과 테스트로 정하고, 범위 밖이면 이유를 한 줄로 적은 뒤 `it.todo`를 지웁니다.
 - 테스트는 내보낸 함수를 호출해 동작을 확인합니다. 테스트만을 위해 함수를 내보내지 않습니다.
 - 기대값은 검사 대상 함수로 계산하지 않고 직접 적습니다. `diffViews`와 `applyPatchesToDom`으로 고친 DOM을 `createDomFromVNode`의 결과와 비교하는 것처럼, 다른 내보낸 함수의 결과와 비교할 수는 있습니다.
 
 ### 결정과 테스트 잇기
 
-ADR의 결정과 그 결정을 지키는 테스트를 ID로 잇습니다. 이유는 [ADR 0009](docs/adr/0009-link-decisions-to-tests.md)에 있습니다.
+ADR의 결정과 그 결정을 지키는 테스트를 ID로 잇습니다. 이유는 [decisions-and-tests-linked-by-id](docs/adr/team/decisions-and-tests-linked-by-id.md)에 있습니다.
 
 - 테스트 이름은 `T26`처럼 ID로 시작합니다. ID는 저장소 전체에서 겹치지 않습니다.
 - 테스트가 지키는 결정이 있으면, 그 ADR에 `(테스트: T9, T26)`처럼 ID를 적습니다. 자리는 아래 "ADR 쓰기"를 따릅니다.
@@ -72,7 +73,7 @@ ADR의 결정과 그 결정을 지키는 테스트를 ID로 잇습니다. 이유
 
 ### ADR 쓰기
 
-새 ADR은 `docs/adr/<결정을 줄인 영어 이름>.md`에 결정 하나만 씁니다. 파일 이름에 번호를 붙이지 않습니다. 이유는 [`adr-is-one-decision-and-one-caution`](docs/adr/adr-is-one-decision-and-one-caution.md)에 있습니다.
+새 ADR은 `docs/adr/<폴더>/<결정을 줄인 영어 이름>.md`에 결정 하나만 씁니다. 파일 이름에 번호를 붙이지 않습니다. 폴더는 그 결정을 지키는 테스트가 부르는 모듈의 단계이고(`docs/adr/README.md`), 코드가 없는 결정은 `team/`입니다. 파일 이름은 폴더가 달라도 겹치지 않아야 합니다. 이유는 [`adr-is-one-decision-and-one-caution`](docs/adr/team/adr-is-one-decision-and-one-caution.md)에 있습니다.
 
 ```md
 ---
@@ -91,11 +92,10 @@ CAUTION: (테스트: F32)
 - **제목:** 결정을 한 문장으로 적습니다. 이유는 적지 않습니다. LMS나 React와 일부러 다르게 정한 결정만 문장 끝에 이유를 한 구절로 붙입니다(예: "(범위)").
 - **CAUTION:** 이 결정을 모르고 쓰면 생기는 실패 하나를 한 줄로 적습니다.
 - **인용:** 본문 아래 마지막 두 줄에 적습니다. `결정:` 줄은 그 결정을 지키는 테스트(코드가 결정을 어기면 실패), `CAUTION:` 줄은 그 실패를 보여 주는 테스트입니다. 해당하는 테스트가 없는 줄은 뺍니다. 꼬리표는 괄호 밖에 둡니다. 괄호 안이 `(테스트:`로 시작하지 않으면 `npm run check`가 읽지 못합니다.
-- 번호가 붙은 기존 ADR(0001~0009)은 이 형식으로 다시 쓰기 전까지 그대로 둡니다.
 
 ## 이름과 함수
 
-**판정 기준:** 함수 본문을 열지 않고 이름과 시그니처만 따라가서, 각 함수가 하는 일과 데이터 경로를 말할 수 있어야 합니다. 이름 형식, default export, 매개변수 재할당은 Biome이 판정하고, 이 절의 나머지는 리뷰에서 봅니다. 이유는 [ADR 0003](docs/adr/0003-names-and-functions-for-human-tracing.md)에 있습니다.
+**판정 기준:** 함수 본문을 열지 않고 이름과 시그니처만 따라가서, 각 함수가 하는 일과 데이터 경로를 말할 수 있어야 합니다. 이름 형식, default export, 매개변수 재할당은 Biome이 판정하고, 이 절의 나머지는 리뷰에서 봅니다. 이유는 [names-and-functions-for-human-tracing](docs/adr/team/names-and-functions-for-human-tracing.md)에 있습니다.
 
 ### 함수 나누기
 
@@ -138,6 +138,7 @@ applyPatchesToDom(container, patches);
 | `can` | 할 수 있는지 묻습니다. `boolean`을 돌려줍니다 |
 | `push` | 목록의 끝에 더합니다 |
 | `start` | 페이지의 처음 상태를 만들고 이벤트를 연결합니다. 값을 돌려주지 않습니다 |
+| `run` | 모아 둔 함수를 차례로 부릅니다. 값을 돌려주지 않습니다 |
 | `back`, `forward` | 이력에서 한 칸 옮기고 그 자리의 값을 돌려줍니다. 옮길 수 없으면 `null`을 돌려줍니다 |
 
 - `StateHistory`의 메서드는 브라우저 History와 팀 테스트 시트의 이름(`push`, `back`, `forward`, `current`, `canBack`, `canForward`, `size`)을 씁니다. `current`와 `size`는 값을 묻는 이름이라 동사를 붙이지 않습니다.
@@ -153,6 +154,7 @@ applyPatchesToDom(container, patches);
 
 - **뜻:** 그 용어가 무엇인지 한 문장으로 적습니다. 다른 용어와 헷갈릴 때만 구별하는 구절을 붙입니다(예: "`container`와 다릅니다").
 - **코드:** 그 용어가 정의된 곳 하나를 적습니다. 그 용어를 쓰는 곳은 적지 않습니다.
+- **올릴 용어:** 일반 프로그래밍 용어는 우리 코드가 그 뜻을 좁힐 때만 올립니다.
 
 | 용어가 가리키는 것 | 코드 칸 | 예 |
 | ------------------ | ------- | -- |

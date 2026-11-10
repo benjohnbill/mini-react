@@ -1,5 +1,5 @@
 // 결정은 ADR에, 그 결정을 지키는 기대값은 테스트에 있어서 한쪽만 바뀌면 어긋납니다.
-// 이 검사는 어긋남 중 ID가 끊긴 것만 잡습니다. 뜻이 같은지는 새 세션 리뷰가 봅니다(ADR 0009).
+// 이 검사는 어긋남 중 ID가 끊긴 것만 잡습니다. 뜻이 같은지는 새 세션 리뷰가 봅니다(ADR decisions-and-tests-linked-by-id).
 import { execFileSync } from "node:child_process";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
