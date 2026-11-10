@@ -7,5 +7,5 @@ status: proposed
 > [!CAUTION]
 > 클릭 함수 안에서 `useState`를 부르면 `Error`가 나므로, 클릭 함수는 렌더링 때 받은 값을 클로저로 씁니다.
 
-결정: (테스트: F15, F43, F44)
+결정: (테스트: F15, F43, F44, F46, F47)
 CAUTION: (테스트: F45)

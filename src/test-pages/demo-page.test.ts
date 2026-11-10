@@ -54,6 +54,26 @@ describe("카운터 데모 페이지", () => {
     expect(getShownCount()).toBe(0);
   });
 
+  it("F114 짝수/홀수 표시는 처음에 짝수이고 클릭하면 홀수가 된다", () => {
+    startDemoPage(document);
+    const readParity = () =>
+      getPageElement("#demo-parity", HTMLElement).textContent;
+    expect(readParity()).toBe("짝수");
+
+    clickDemoButton();
+
+    expect(readParity()).toBe("홀수");
+  });
+
+  it("F115 문서 제목은 숫자를 따라 바뀐다", () => {
+    startDemoPage(document);
+    expect(document.title).toBe("숫자 0");
+
+    clickDemoButton();
+
+    expect(document.title).toBe("숫자 1");
+  });
+
   it("F105 늘리기 버튼을 한 번 클릭하면 숫자가 1 늘어난다", () => {
     startDemoPage(document);
     const countBefore = getShownCount();
