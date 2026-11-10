@@ -28,7 +28,8 @@ mini-react/
 │   ├── diff.ts            diffViews: 두 View → Patch 목록
 │   ├── patch.ts           Patch 형식, applyPatchesToDom
 │   ├── history.ts         StateHistory: 저장한 View 목록과 현재 위치
-│   ├── test-pages/        검증 페이지 코드와 테스트
+│   ├── function-component.ts  FunctionComponent, useState (Root Component를 감싸 mount와 update로 그림)
+│   ├── test-pages/        검증 페이지와 데모 페이지 코드와 테스트
 │   └── *.test.ts          테스트는 소스 옆에 둠
 ├── docs/adr/              되돌리기 어려운 결정과 이유. 폴더는 데이터가 지나가는 단계(docs/adr/README.md). 끝 두 줄의 ID = 지키는 테스트
 ├── scripts/
@@ -57,7 +58,7 @@ flowchart LR
     P -->|"applyPatchesToDom(container, patches)"| C
 ```
 
-함수 이름은 `src/`의 export와 같습니다. `src/main.ts`는 아직 이 함수들을 잇지 않습니다.
+함수 이름은 `src/`의 export와 같습니다. `src/main.ts`가 검증 페이지와 데모 페이지를 시작합니다. 단계별 흐름은 `docs/adr/README.md`에 있습니다.
 
 ## 팀
 
