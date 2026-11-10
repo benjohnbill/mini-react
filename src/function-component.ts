@@ -16,11 +16,15 @@ export type Deps = readonly unknown[];
 export type Cleanup = () => void;
 export type Effect = () => undefined | Cleanup;
 
-type StateCell = { value: unknown };
+type StateCell = { value: unknown; setter: StateSetter<unknown> };
 type EffectCell = { deps: Deps | undefined; cleanup: Cleanup | undefined };
 type MemoCell = { deps: Deps | undefined; value: unknown };
 type HookCell = StateCell | EffectCell | MemoCell;
-type PendingEffect = { cell: EffectCell; effect: Effect };
+type PendingEffect = {
+  cell: EffectCell;
+  effect: Effect;
+  deps: Deps | undefined;
+};
 
 // 렌더링하는 동안만 그 Root Instance를 가리킵니다. 렌더링이 끝나면 비웁니다.
 let currentComponent: FunctionComponent | undefined;
@@ -36,6 +40,9 @@ export class FunctionComponent {
   constructor(private readonly rootComponent: RootComponent) {}
 
   mount(container: Element): void {
+    if (this.container !== undefined) {
+      throw new Error("mount() can be called only once");
+    }
     this.container = container;
     this.currentView = this.renderedView();
     container.replaceChildren(createDomFromVNode(this.currentView));
@@ -59,11 +66,14 @@ export class FunctionComponent {
     this.runPendingEffects();
   }
 
-  // 정리 함수를 모두 먼저 부른 뒤 effect를 선언 순서대로 부릅니다.
+  // 렌더링이 끝까지 간 effect만 deps를 기록한 뒤, 정리 함수를 모두 먼저 부르고 effect를 선언 순서대로 부릅니다.
   // effect 안의 setter가 시작한 update()는 자기 렌더링의 effect를 그 안에서 따로 부릅니다.
   private runPendingEffects(): void {
     const pendingEffects = this.pendingEffects;
     this.pendingEffects = [];
+    for (const { cell, deps } of pendingEffects) {
+      cell.deps = deps;
+    }
     for (const { cell } of pendingEffects) {
       cell.cleanup?.();
       cell.cleanup = undefined;
@@ -74,16 +84,25 @@ export class FunctionComponent {
     }
   }
 
-  // Root Component가 Error를 던져도 렌더링 중인 인스턴스를 비웁니다.
+  // Root Component가 Error를 던지면 렌더링 중인 인스턴스를 비우고, 클릭 함수와 effect는 직전 렌더링의 것을 남깁니다.
   private renderedView(): VNode {
-    this.actions.clear();
+    const actions = new Map<string, ActionHandler>();
     this.pendingEffects = [];
     currentComponent = this;
     hookIndex = 0;
     try {
-      return this.rootComponent({
-        on: (name, handler) => this.actions.set(name, handler),
+      const view = this.rootComponent({
+        on: (name, handler) => {
+          if (currentComponent !== this) {
+            throw new Error(
+              "on() can only be called while Root Component renders",
+            );
+          }
+          actions.set(name, handler);
+        },
       });
+      this.actions = actions;
+      return view;
     } finally {
       currentComponent = undefined;
     }
@@ -92,20 +111,36 @@ export class FunctionComponent {
 
 export function useState<T>(initialValue: T | (() => T)): [T, StateSetter<T>] {
   const component = getCurrentComponent();
-  const cell = (component.hooks[hookIndex] as StateCell | undefined) ?? {
-    value: createValueFromInitialValue(initialValue),
-  };
+  const cell =
+    (component.hooks[hookIndex] as StateCell | undefined) ??
+    createStateCell(component, createValueFromInitialValue(initialValue));
   component.hooks[hookIndex] = cell;
   hookIndex++;
-  const setValue: StateSetter<T> = (nextValue) => {
-    const newValue = createValueFromNextValue(nextValue, cell.value as T);
-    if (Object.is(cell.value, newValue)) {
-      return;
-    }
-    cell.value = newValue;
-    component.update();
+  return [cell.value as T, cell.setter as StateSetter<T>];
+}
+
+// 칸과 그 칸의 setter를 한 번 만들어, 렌더링마다 같은 setter를 돌려줍니다.
+function createStateCell(
+  component: FunctionComponent,
+  initialValue: unknown,
+): StateCell {
+  const cell: StateCell = {
+    value: initialValue,
+    setter: (nextValue) => {
+      if (currentComponent !== undefined) {
+        throw new Error(
+          "setters cannot be called while Root Component renders",
+        );
+      }
+      const newValue = createValueFromNextValue(nextValue, cell.value);
+      if (Object.is(cell.value, newValue)) {
+        return;
+      }
+      cell.value = newValue;
+      component.update();
+    },
   };
-  return [cell.value as T, setValue];
+  return cell;
 }
 
 export function useEffect(effect: Effect, deps?: Deps): void {
@@ -117,8 +152,7 @@ export function useEffect(effect: Effect, deps?: Deps): void {
   if (previousCell !== undefined && !hasChangedDeps(previousCell.deps, deps)) {
     return;
   }
-  cell.deps = deps;
-  component.pendingEffects.push({ cell, effect });
+  component.pendingEffects.push({ cell, effect, deps });
 }
 
 export function useMemo<T>(compute: () => T, deps?: Deps): T {
