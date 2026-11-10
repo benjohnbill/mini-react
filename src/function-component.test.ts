@@ -1711,20 +1711,43 @@ describe("useEffect 안의 setter와 오류", () => {
     expect(log).toHaveLength(4);
   });
 
-  it("F91 []인 effect A가 setter를 부르고 deps 없는 effect B가 뒤에 있으면, 최종 화면은 새 값이고 B는 두 번 불린다", () => {
+  it("F91 []인 effect A가 setter를 부르고 deps 없는 effect B가 뒤에 있으면, 최종 화면은 새 값이고 B는 새 값으로 한 번만 불린다", () => {
     const { container, log } = mountEffectRoot((_props, log) => {
       const [value, setValue] = useState("old");
       useEffect(() => {
         setValue("new");
       }, []);
       useEffect(() => {
-        log.push("b");
+        log.push(`b ${value}`);
       });
       return { type: "p", props: {}, children: [value] };
     });
 
     expect(container.textContent).toBe("new");
-    expect(log).toEqual(["b", "b"]);
+    expect(log).toEqual(["b new"]);
+  });
+
+  it("F91a 중첩 update()가 다시 예약한 effect의 정리 함수는 다음 렌더링에서 새 값으로 불린다", () => {
+    const container = createContainer();
+    const log: string[] = [];
+    const component = new FunctionComponent((): VNode => {
+      const [value, setValue] = useState("old");
+      useEffect(() => {
+        setValue("new");
+      }, []);
+      useEffect(() => {
+        log.push(`b ${value}`);
+        return () => {
+          log.push(`cleanup ${value}`);
+        };
+      });
+      return { type: "p", props: {}, children: [value] };
+    });
+    component.mount(container);
+
+    component.update();
+
+    expect(log).toEqual(["b new", "cleanup new", "b new"]);
   });
 
   it("F93 effect가 Error를 던지면 mount에서 그 Error가 나가고 DOM은 이미 첫 View다", () => {

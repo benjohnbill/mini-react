@@ -17,13 +17,18 @@ export type Cleanup = () => void;
 export type Effect = () => undefined | Cleanup;
 
 type StateCell = { value: unknown; setter: StateSetter<unknown> };
-type EffectCell = { deps: Deps | undefined; cleanup: Cleanup | undefined };
+type EffectCell = {
+  deps: Deps | undefined;
+  cleanup: Cleanup | undefined;
+  version: number;
+};
 type MemoCell = { deps: Deps | undefined; value: unknown };
 type HookCell = StateCell | EffectCell | MemoCell;
 type PendingEffect = {
   cell: EffectCell;
   effect: Effect;
   deps: Deps | undefined;
+  version: number;
 };
 
 // 렌더링하는 동안만 그 Root Instance를 가리킵니다. 렌더링이 끝나면 비웁니다.
@@ -78,7 +83,11 @@ export class FunctionComponent {
       cell.cleanup?.();
       cell.cleanup = undefined;
     }
-    for (const { cell, effect } of pendingEffects) {
+    for (const { cell, effect, version } of pendingEffects) {
+      // effect 안의 setter가 시작한 update()가 이 effect를 다시 예약했으면, 낡은 것은 건너뜁니다.
+      if (version !== cell.version) {
+        continue;
+      }
       const result = effect();
       cell.cleanup = typeof result === "function" ? result : undefined;
     }
@@ -146,13 +155,18 @@ function createStateCell(
 export function useEffect(effect: Effect, deps?: Deps): void {
   const component = getCurrentComponent();
   const previousCell = component.hooks[hookIndex] as EffectCell | undefined;
-  const cell = previousCell ?? { deps: undefined, cleanup: undefined };
+  const cell = previousCell ?? {
+    deps: undefined,
+    cleanup: undefined,
+    version: 0,
+  };
   component.hooks[hookIndex] = cell;
   hookIndex++;
   if (previousCell !== undefined && !hasChangedDeps(previousCell.deps, deps)) {
     return;
   }
-  component.pendingEffects.push({ cell, effect, deps });
+  cell.version++;
+  component.pendingEffects.push({ cell, effect, deps, version: cell.version });
 }
 
 export function useMemo<T>(compute: () => T, deps?: Deps): T {
