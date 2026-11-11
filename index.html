@@ -31,6 +31,171 @@
         color: #b00020;
         min-height: 1.5em;
       }
+      /* 순위 페이지: 왼쪽은 Root Component가 그리는 container, 오른쪽은 Hook 패널입니다. */
+      #ranking-section {
+        margin-top: 2rem;
+        min-height: 100vh;
+        word-break: keep-all;
+        overflow-wrap: break-word;
+      }
+      #ranking-notice {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 999px;
+        background: #e8f0fe;
+        color: #174ea6;
+        min-height: 1.5em;
+      }
+      .ranking-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+        gap: 1rem;
+        align-items: start;
+      }
+      #ranking .reader {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+      }
+      #ranking section,
+      #hook-panel {
+        border: 1px solid #c4c7c5;
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+      }
+      #ranking h3,
+      #hook-panel h3 {
+        margin: 0 0 0.5rem;
+        font-size: 1rem;
+      }
+      #ranking ul,
+      #ranking ol {
+        margin: 0;
+        padding: 0;
+        list-style-position: inside;
+      }
+      #ranking li {
+        display: grid;
+        grid-template-columns: 1fr 5rem auto auto auto;
+        gap: 0.5rem;
+        align-items: center;
+        padding: 0.35rem 0.25rem;
+        border-bottom: 1px solid #eee;
+      }
+      #ranking ol {
+        counter-reset: rank;
+      }
+      #ranking ol li {
+        grid-template-columns: 1.5rem 1fr 5rem auto;
+        counter-increment: rank;
+      }
+      #ranking ol li::before {
+        content: counter(rank);
+        color: #5f6368;
+      }
+      #ranking .track {
+        color: #5f6368;
+        font-size: 0.85rem;
+      }
+      #ranking .score {
+        min-width: 1.5rem;
+        text-align: center;
+      }
+      #ranking button {
+        font: inherit;
+        padding: 0.15rem 0.6rem;
+        border: 1px solid #888;
+        border-radius: 6px;
+        background: #fff;
+        cursor: pointer;
+      }
+      #ranking button:focus-visible {
+        outline: 3px solid #1a73e8;
+        outline-offset: 1px;
+      }
+      #ranking .tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+        margin: 0 0 0.5rem;
+      }
+      #ranking .tab.selected {
+        background: #1a73e8;
+        border-color: #1a73e8;
+        color: #fff;
+      }
+      #ranking .toggle {
+        margin-bottom: 0.5rem;
+      }
+      #hook-panel {
+        font-size: 0.9rem;
+      }
+      #hook-panel .stages {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      #hook-panel .stage {
+        padding: 0.15rem 0.5rem;
+        border: 1px solid #c4c7c5;
+        border-radius: 6px;
+        color: #9aa0a6;
+        font-family: monospace;
+      }
+      #hook-panel .stage.ran {
+        animation: stage-on 250ms both;
+      }
+      @keyframes stage-on {
+        from {
+          background: #fff;
+          border-color: #c4c7c5;
+          color: #9aa0a6;
+        }
+        to {
+          background: #1a73e8;
+          border-color: #1a73e8;
+          color: #fff;
+        }
+      }
+      #hook-panel .panel-message {
+        margin: 0.5rem 0 1rem;
+        min-height: 1.5em;
+      }
+      #hook-panel table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 1rem;
+      }
+      #hook-panel th,
+      #hook-panel td {
+        padding: 0.25rem 0.4rem;
+        border-bottom: 1px solid #eee;
+        text-align: left;
+        vertical-align: top;
+      }
+      #hook-panel th,
+      #hook-panel .cell-value,
+      #hook-panel-patches {
+        font-family: monospace;
+        font-weight: normal;
+      }
+      #hook-panel .cell-result {
+        white-space: nowrap;
+        color: #9aa0a6;
+      }
+      #hook-panel tr[data-result="changed"] .cell-result,
+      #hook-panel tr[data-result="recomputed"] .cell-result,
+      #hook-panel tr[data-result="ran"] .cell-result {
+        color: #b3261e;
+        font-weight: bold;
+      }
+      #hook-panel-patches {
+        margin: 0;
+        padding-left: 1.5rem;
+      }
     </style>
   </head>
   <body>
@@ -67,6 +232,14 @@
     <section id="demo-section">
       <h2>데모 페이지</h2>
       <div id="demo">
+      </div>
+    </section>
+    <section id="ranking-section">
+      <h2>순위 페이지</h2>
+      <p id="ranking-notice" role="status"></p>
+      <div class="ranking-layout">
+        <div id="ranking"></div>
+        <aside id="hook-panel"></aside>
       </div>
     </section>
     <script type="module" src="/src/main.ts"></script>

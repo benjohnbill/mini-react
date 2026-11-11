@@ -27,6 +27,14 @@ mini-react 코드에서 쓰는 이름을 고정합니다. 쓰는 법은 `CONVENT
 |---|---|---|
 | **데모 페이지** | `index.html`의 `#demo`에 카운터 Root Component를 `mount`해 Phase 2를 화면에서 확인하는 페이지입니다. 검증 페이지와 다릅니다. | `startDemoPage` |
 
+## 순위 페이지
+
+| 용어 | 뜻 | 코드 |
+|---|---|---|
+| **순위 페이지** | `index.html`의 `#ranking`에 순위 Root Component를 `mount`해, 클릭마다 세 Hook이 실행되는지 건너뛰는지를 화면에서 확인하는 페이지입니다. 데모 페이지와 다릅니다. | `startRankingPage` |
+| **Hook 패널** | 클릭마다 Root Instance의 `hooks`와 `View`를 직전 값과 비교해, 지난 단계와 칸의 결과와 `Patch` 목록을 보여 주는 영역입니다. | `startHookPanel` |
+| **단계** | 클릭 하나가 지나는 일곱 구간(`click`, `setter`, `instance`, `render`, `diff`, `patch`, `effect`)으로, `docs/adr/`의 폴더 이름과 같습니다. | `stages` |
+
 ## Component와 상태
 
 | 용어 | 뜻 | 코드 |
