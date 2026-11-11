@@ -1,4 +1,4 @@
-// Patch의 형식과 path의 기준은 ADR 0006에 있습니다.
+// Patch의 형식은 ADR patch-kinds-are-text-replace-props-insert-remove에, path의 기준은 ADR path-is-children-index-list-from-view에 있습니다.
 import { createDomFromVNode, isTextInput, type VNode } from "./vnode";
 
 export type Patch =

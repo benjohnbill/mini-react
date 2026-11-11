@@ -645,7 +645,7 @@ describe("검증 페이지", () => {
       const page = createPageFromIndexHtml();
       applyHtmlWithPatchButton(page, B_HTML);
 
-      // 개발자 도구로 실제 영역을 고친 경우입니다. View 앞에 글자가 생기면 path []가 그 글자를 가리킵니다(ADR 0006).
+      // 개발자 도구로 실제 영역을 고친 경우입니다. View 앞에 글자가 생기면 path []가 그 글자를 가리킵니다(ADR path-is-children-index-list-from-view).
       page.real.prepend(" ");
       page.backButton.click();
       expect(page.real.childNodes).toHaveLength(1);
