@@ -1,4 +1,4 @@
-// M2 공통 테스트입니다. Patch의 형식과 순서의 근거는 ADR 0006입니다.
+// M2 공통 테스트입니다. Patch의 형식과 순서의 근거는 ADR patch-kinds-are-text-replace-props-insert-remove와 diff-compares-same-index-children-first입니다.
 import { describe, expect, it } from "vitest";
 import { diffViews } from "./diff";
 import type { VNode } from "./vnode";
@@ -154,6 +154,12 @@ describe("diffViews", () => {
           createElementVNode("p", {}, [" a\nb "]),
         ),
       ).toStrictEqual([{ type: "TEXT", path: [0], text: " a\nb " }]);
+      expect(
+        diffViews(
+          createElementVNode("p", {}, ["a"]),
+          createElementVNode("p", {}, [" a "]),
+        ),
+      ).toStrictEqual([{ type: "TEXT", path: [0], text: " a " }]);
     });
 
     it("D14 한글과 특수문자를 그대로 TEXT에 담습니다", () => {
@@ -551,6 +557,15 @@ describe("diffViews", () => {
           node: createElementVNode("li", {}, ["c"]),
         },
       ]);
+    });
+
+    it("D38a children 안의 null은 검사하지 않아 요소와 비교하는 안쪽에서 TypeError가 납니다", () => {
+      expect(() =>
+        diffViews(
+          createElementVNode("div", {}, [createElementVNode("p", {}, [])]),
+          createElementVNode("div", {}, [null as unknown as VNode]),
+        ),
+      ).toThrow(TypeError);
     });
 
     it("D38 인자가 null이나 undefined이면 TypeError를 던집니다", () => {

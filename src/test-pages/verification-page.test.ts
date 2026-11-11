@@ -558,10 +558,6 @@ describe("검증 페이지", () => {
       page.backButton.click();
       expectAreasToShow(page, INITIAL_HTML);
     });
-
-    it.todo(
-      "V92 verify-highlight 바뀐 요소를 잠시 강조합니다. 선택 사례이며 구현하지 않았습니다. 강조 속성이 실제 영역을 바꾸면 V75의 MutationObserver 검사에서 뺄 규칙도 함께 정해야 합니다",
-    );
   });
 
   describe("F-NAV 뒤로가기와 앞으로가기", () => {
@@ -645,7 +641,7 @@ describe("검증 페이지", () => {
       const page = createPageFromIndexHtml();
       applyHtmlWithPatchButton(page, B_HTML);
 
-      // 개발자 도구로 실제 영역을 고친 경우입니다. View 앞에 글자가 생기면 path []가 그 글자를 가리킵니다(ADR 0006).
+      // 개발자 도구로 실제 영역을 고친 경우입니다. View 앞에 글자가 생기면 path []가 그 글자를 가리킵니다(ADR path-is-children-index-list-from-view).
       page.real.prepend(" ");
       page.backButton.click();
       expect(page.real.childNodes).toHaveLength(1);

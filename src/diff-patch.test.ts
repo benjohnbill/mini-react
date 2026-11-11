@@ -1,4 +1,4 @@
-// diffViews와 applyPatchesToDom을 함께 쓰는 통합 테스트입니다. 근거는 ADR 0005와 ADR 0006입니다.
+// diffViews와 applyPatchesToDom을 함께 쓰는 통합 테스트입니다. 근거는 ADR applying-diff-patches-makes-dom-equal-new-view입니다.
 // 다시 읽은 View가 같아도 노드의 참조와 입력칸의 .value는 보장되지 않으므로, 각각 따로 확인합니다.
 import { describe, expect, it } from "vitest";
 import { diffViews } from "./diff";

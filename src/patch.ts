@@ -1,4 +1,4 @@
-// Patch의 형식과 path의 기준은 ADR 0006에 있습니다.
+// Patch의 형식은 ADR patch-kinds-are-text-replace-props-insert-remove에, path의 기준은 ADR path-is-children-index-list-from-view에 있습니다.
 import { createDomFromVNode, isTextInput, type VNode } from "./vnode";
 
 export type Patch =
@@ -63,7 +63,7 @@ function applyPropsToNode(
     );
   }
   for (const [name, value] of Object.entries(patch.set)) {
-    // ADR 0005: 입력칸의 props.value는 value 속성이 아니라 .value입니다.
+    // ADR input-value-prop-is-dot-value: 입력칸의 props.value는 value 속성이 아니라 .value입니다.
     if (name === "value" && isTextInput(node)) {
       node.value = value;
     } else {
@@ -116,7 +116,7 @@ function getChildByIndex(
   return child;
 }
 
-// ADR 0005: VNode의 children은 글자와 요소만 담으므로, 번호도 그 둘로만 셉니다.
+// ADR vnode-children-match-dom-children-by-number: VNode의 children은 글자와 요소만 담으므로, 번호도 그 둘로만 셉니다.
 function createChildListFromNode(node: Node): ChildNode[] {
   return [...node.childNodes].filter(
     (child) => child instanceof Text || child instanceof Element,

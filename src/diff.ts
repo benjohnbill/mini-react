@@ -1,4 +1,4 @@
-// Patch의 순서는 ADR 0006을 따릅니다. 같은 번호끼리 비교한 Patch, INSERT(앞 번호부터), REMOVE(뒤 번호부터) 순서입니다.
+// Patch의 순서는 ADR diff-compares-same-index-children-first와 diff-emits-props-before-child-patches를 따릅니다. 같은 번호끼리 비교한 Patch, INSERT(앞 번호부터), REMOVE(뒤 번호부터) 순서입니다.
 import type { Patch } from "./patch";
 import type { VNode } from "./vnode";
 

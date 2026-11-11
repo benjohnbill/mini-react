@@ -25,7 +25,7 @@ export function startVerificationPage(page: ParentNode): void {
 
   applyHtmlRoundTripToNode(elements.real);
   const realViewElement = getViewElement(elements.real);
-  // ADR 0006: container에는 View 하나만 둡니다. View 앞뒤의 공백 글자를 지웁니다.
+  // ADR path-is-children-index-list-from-view: container에는 View 하나만 둡니다. View 앞뒤의 공백 글자를 지웁니다.
   elements.real.replaceChildren(realViewElement);
 
   const stateHistory = new StateHistory();
@@ -133,7 +133,7 @@ function applySavedViewToPage(elements: PageElements, savedView: VNode): void {
   );
 }
 
-// ADR 0006: applyPatchesToDom은 실패해도 앞서 적용한 Patch를 되돌리지 않습니다.
+// ADR patch-error-does-not-roll-back: applyPatchesToDom은 실패해도 앞서 적용한 Patch를 되돌리지 않습니다.
 // 반쯤 바뀐 실제 영역을 남기지 않도록, 이력이 가리키는 View로 실제 영역을 다시 만듭니다.
 // jsdom의 DOMException은 Error의 instanceof 검사를 통과하지 않으므로, 던져진 값의 종류는 가리지 않습니다.
 function applyErrorToPage(
