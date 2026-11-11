@@ -3,13 +3,18 @@
 import { describe, expect, it } from "vitest";
 import { diffViews } from "./diff";
 import { applyPatchesToDom } from "./patch";
-import { createDomFromVNode, createVNodeFromDom, type VNode } from "./vnode";
+import {
+  createDomFromVNode,
+  createVNodeFromDom,
+  type Props,
+  type VNode,
+} from "./vnode";
 
 type ElementVNode = Exclude<VNode, string>;
 
 function createElementVNode(
   type: string,
-  props: Record<string, string>,
+  props: Props,
   children: VNode[],
 ): ElementVNode {
   return { type, props, children };

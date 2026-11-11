@@ -1,5 +1,12 @@
 // Patch의 형식과 path의 기준은 ADR 0006에 있습니다.
-import { createDomFromVNode, isTextInput, type VNode } from "./vnode";
+import {
+  applyPropToElement,
+  createDomFromVNode,
+  isTextInput,
+  type Props,
+  removePropFromElement,
+  type VNode,
+} from "./vnode";
 
 export type Patch =
   | { type: "TEXT"; path: number[]; text: string }
@@ -7,7 +14,7 @@ export type Patch =
   | {
       type: "PROPS";
       path: number[];
-      set: Record<string, string>;
+      set: Props;
       remove: string[];
     }
   | { type: "INSERT"; path: number[]; node: VNode }
@@ -64,14 +71,18 @@ function applyPropsToNode(
   }
   for (const [name, value] of Object.entries(patch.set)) {
     // ADR 0005: 입력칸의 props.value는 value 속성이 아니라 .value입니다.
-    if (name === "value" && isTextInput(node)) {
-      node.value = value;
+    if (
+      name === "value" &&
+      isTextInput(node) &&
+      (typeof value === "string" || typeof value === "number")
+    ) {
+      node.value = String(value);
     } else {
-      node.setAttribute(name, value);
+      applyPropToElement(node, name, value);
     }
   }
   for (const name of patch.remove) {
-    node.removeAttribute(name);
+    removePropFromElement(node, name);
   }
 }
 
