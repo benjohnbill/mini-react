@@ -87,3 +87,62 @@ git push -u origin <이니셜>
 npm ci
 npm test
 ```
+
+
+## Getting Started
+
+Node.js **26**이 필요합니다(`.nvmrc` 기준). 저장소를 내려받고 개발 서버를 실행하세요.
+
+```bash
+git clone https://github.com/benjohnbill/mini-react.git
+cd mini-react
+npm ci
+npm run dev
+```
+
+### Hello World
+
+Root Component는 화면을 설명하는 `VNode`를 돌려주는 함수입니다. 문자열도 VNode이므로 다음 코드만으로 첫 화면을 그릴 수 있습니다.
+
+[docs/examples/hello-world/main.ts](docs/examples/hello-world/main.ts):
+
+아래 상대 import 경로는 `docs/examples/hello-world/` 기준입니다.
+
+```ts
+import { FunctionComponent } from "../../../src/function-component";
+
+const container = document.querySelector("#app");
+if (container === null) {
+  throw new Error("#app 요소가 필요합니다");
+}
+
+new FunctionComponent(() => "Hello World").mount(container);
+```
+
+HTML에는 화면을 그릴 요소와 TypeScript 파일을 불러오는 코드가 필요합니다. 위 코드는 이미 저장소에 있으므로 파일을 수정하지 않고 실행할 수 있습니다. 아래는 실행에 필요한 [index.html](docs/examples/hello-world/index.html)입니다.
+
+```html
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hello World | mini-react</title>
+    <link rel="stylesheet" href="../examples.css" />
+  </head>
+  <body>
+    <main>
+      <div id="app"></div>
+    </main>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
+```
+
+개발 서버를 실행한 뒤 브라우저에서 `http://localhost:5173/docs/examples/hello-world/`를 여세요. 화면에 `Hello World`가 표시됩니다. 포트가 다르면 `5173`을 터미널에 표시된 포트로 바꾸세요.
+
+![Hello World 실행 화면](docs/examples/hello-world/screenshot.png)
+
+### 더 많은 예제
+
+[예제 모음](docs/examples/README.md)에서 mini-react의 주요 기능을 사용하는 더 많은 예제를 확인할 수 있습니다.
