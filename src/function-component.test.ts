@@ -661,6 +661,7 @@ describe("useState setter", () => {
     const container = createContainer();
     new FunctionComponent(({ on }) => {
       const [show, setShow] = useState(true);
+      // biome-ignore lint/correctness/useHookAtTopLevel: 조건부 Hook이 칸을 밀어내는 CAUTION을 보여 주는 테스트입니다
       const first = show ? useState("first")[0] : "skipped";
       const [second] = useState("second");
       on("hide", () => setShow(false));
@@ -955,6 +956,7 @@ describe("Hook 호출 위치", () => {
       renderCount++;
       on("inc", () => {
         try {
+          // biome-ignore lint/correctness/useHookAtTopLevel: 렌더링 밖 Hook 호출이 Error인지 확인하는 테스트입니다
           useState(0);
         } catch (error) {
           errorFromClick = error;
@@ -1351,6 +1353,7 @@ describe("상태 없는 자식 Component", () => {
   it("F70 한계 — 자식 Component의 useState는 Error 없이 Root Instance의 칸을 써서, 자식을 빼면 Root Component가 자식의 값을 받는다", () => {
     const container = createContainer();
     const createChildWithState = (): VNode => {
+      // biome-ignore lint/correctness/useHookAtTopLevel: 자식 Component 안의 Hook이 막히지 않는 한계를 보여 주는 테스트입니다
       const [childValue] = useState("child");
       return { type: "span", props: {}, children: [childValue] };
     };

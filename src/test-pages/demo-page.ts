@@ -48,7 +48,7 @@ function createActionButton({
   };
 }
 
-const counterRootComponent: RootComponent = ({ on }): VNode => {
+const CounterRootComponent: RootComponent = ({ on }): VNode => {
   const [count, setCount] = useState(0);
   const parity = useMemo(() => (count % 2 === 0 ? "짝수" : "홀수"), [count]);
   useEffect(() => {
@@ -70,5 +70,5 @@ export function startDemoPage(page: ParentNode): void {
   if (demo === null) {
     throw new Error("Demo page has no #demo");
   }
-  new FunctionComponent(counterRootComponent).mount(demo);
+  new FunctionComponent(CounterRootComponent).mount(demo);
 }

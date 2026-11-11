@@ -144,6 +144,7 @@ applyPatchesToDom(container, patches);
 
 - `StateHistory`의 메서드는 브라우저 History와 팀 테스트 시트의 이름(`push`, `back`, `forward`, `current`, `canBack`, `canForward`, `size`)을 씁니다. `current`와 `size`는 값을 묻는 이름이라 동사를 붙이지 않습니다.
 - 변환 함수는 `create<결과>From<입력>`으로 짓습니다. 비교 방식 같은 구현은 이름에 넣지 않습니다.
+- Root Component는 PascalCase 명사로 짓고(예: `CounterRootComponent`), 자식 Component는 `create<이름>`으로 짓습니다. Biome `useHookAtTopLevel`은 대문자로 시작하는 함수만 Component로 보고, 그 밖의 함수 안에서 부른 Hook을 오류로 알립니다. 이유는 [hook-position-checked-by-lint](docs/adr/team/hook-position-checked-by-lint.md)에 있습니다.
 - 변수는 명사로 짓고, 쓰이는 범위가 넓을수록 길게 짓습니다.
 - 숫자 상수에는 이름을 붙입니다.
 - 같은 개념은 모든 파일에서 같은 이름을 씁니다. 이름은 `GLOSSARY.md`를 따릅니다.
