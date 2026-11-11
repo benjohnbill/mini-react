@@ -26,10 +26,10 @@ status: 2026-11-11 기준
 | L6 | 이 클래스에는 아래 기능이 필요합니다. hooks 배열 (상태 저장용) | 충족 | hook-cells-are-found-by-call-order | — |
 | L7 | mount(): 처음 렌더링 | 충족 | root-instance-keeps-container-and-current-view, component-returns-view-and-function-component-draws | — |
 | L8 | update(): 상태 변경 후 다시 렌더링 | 충족 | root-instance-keeps-container-and-current-view, setter-updates-without-batching, update-before-mount-throws-error | — |
-| L9 | Hook 은 최상위 컴포넌트에서만 사용 가능합니다. | 충족 | hook-rule-kept-by-convention, hook-outside-render-throws-error, root-only-function-component | — |
+| L9 | Hook 은 최상위 컴포넌트에서만 사용 가능합니다. | 충족 | hook-rule-kept-by-convention, hook-position-checked-by-lint, hook-outside-render-throws-error, root-only-function-component | — |
 | L10 | State (상태) 는 "최상위 컴포넌트 (루트 컴포넌트)" 에서만 관리합니다. | 충족 | root-only-function-component | — |
 | L11 | 자식 컴포넌트는 state (상태) 를 가지지 않고, 부모로부터 전달받은 props 만 사용합니다. (Lifting State Up 패턴) | 충족 | root-only-function-component, child-reports-click-with-data-action-string | — |
-| L12 | 즉, 자식 컴포넌트는 상태 없이 (Stateless) props 만 받아서 사용하는 순수 함수로 구현합니다. | 충족 | root-only-function-component, child-reports-click-with-data-action-string, hook-rule-kept-by-convention | — |
+| L12 | 즉, 자식 컴포넌트는 상태 없이 (Stateless) props 만 받아서 사용하는 순수 함수로 구현합니다. | 충족 | root-only-function-component, child-reports-click-with-data-action-string, hook-rule-kept-by-convention, hook-position-checked-by-lint | — |
 | L13 | State 는 값이 변경될 수 있는 동적 데이터입니다. | 충족 | (테스트: F8, F20, F21, F22) | — |
 | L14 | State 가 바뀌면 → 화면이 자동으로 다시 그려져야 합니다. | 충족 | setter-updates-without-batching, setter-skips-same-value | — |
 | L15 | 함수형 컴포넌트에서도 상태와 생명주기를 사용할 수 있게 해주는 기능입니다. | 충족 | effect-runs-right-after-dom-update, cleanups-run-before-effects-in-order, no-unmount-so-cleanup-runs-only-before-rerun | — |
@@ -53,7 +53,7 @@ status: 2026-11-11 기준
 | L33 | 단위 테스트 를 통해 각 모듈 (Virtual DOM 변환, Diff, Patch, useState, useEffect, useMemo 등) 을 검증합니다. | 충족 | (테스트: T1, D1, P1, H1, F16, F71, F94) | — |
 | L34 | 기능 테스트를 통해 화면이 제대로 동작하는지 확인합니다. | 충족 | verification-page-tested-in-jsdom-without-browser-runner, demo-page-is-one-counter | — |
 | L35 | 테스트 영역에 다양한 태그와 요소를 추가해 여러 동작과 변화를 자유롭게 확인해 보세요. | 충족 | verification-test-area-is-html-textarea, verification-patch-compares-against-real-area | — |
-| L36 | 엣지 케이스를 최대한 고려 합니다. | 충족 | setter-skips-same-value, deps-compare-each-item-with-object-is, hook-outside-render-throws-error, update-before-mount-throws-error, render-error-keeps-previous-render, effect-error-propagates-after-dom-update, effect-non-function-return-is-ignored, mount-can-be-called-once, root-instances-are-independent, updater-error-leaves-state-unchanged, setter-is-same-function-every-render, setter-during-render-throws-error, on-outside-render-throws-error, same-action-name-last-registration-wins | 검토하고 범위 밖으로 뺀 경우(테스트 없음): `useMemo` 계산 함수 안의 `useState`(Hook 규칙 위반, `hook-rule-kept-by-convention`), 글자 노드에 보낸 클릭(실제 브라우저의 클릭 대상은 요소), `data-action=""`(쓰는 화면 없음), 클릭 함수가 `Error`를 던진 뒤의 클릭(브라우저가 리스너를 지킴), effect 안 setter의 끝없는 반복(`setter-in-effect-updates-immediately`의 CAUTION), `main.ts`를 직접 부르는 테스트(시작 함수 테스트가 대신함). |
+| L36 | 엣지 케이스를 최대한 고려 합니다. | 충족 | setter-skips-same-value, deps-compare-each-item-with-object-is, hook-outside-render-throws-error, update-before-mount-throws-error, render-error-keeps-previous-render, effect-error-propagates-after-dom-update, effect-non-function-return-is-ignored, mount-succeeds-only-once, root-instances-are-independent, updater-error-leaves-state-unchanged, setter-is-same-function-every-render, setter-during-render-throws-error, on-outside-render-throws-error, same-action-name-last-registration-wins | 검토하고 범위 밖으로 뺀 경우(테스트 없음): `useMemo` 계산 함수 안의 `useState`(Hook 규칙 위반, `hook-rule-kept-by-convention`), 글자 노드에 보낸 클릭(실제 브라우저의 클릭 대상은 요소), `data-action=""`(쓰는 화면 없음), 클릭 함수가 `Error`를 던진 뒤의 클릭(브라우저가 리스너를 지킴), effect 안 setter의 끝없는 반복(`setter-in-effect-updates-immediately`의 CAUTION), `main.ts`를 직접 부르는 테스트(시작 함수 테스트가 대신함). |
 | L37 | 이력서와 포트폴리오에 포함할 수 있을 만큼 완성도 높은 수준으로 구현합니다. | 대상 아님 | 품질 목표라 코드로 판정할 수 없음 (참고: `README.md`의 동작 흐름 그림이 Phase 2를 담지 않음) | — |
 
 

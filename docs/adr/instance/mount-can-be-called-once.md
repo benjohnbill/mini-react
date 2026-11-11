@@ -1,5 +1,5 @@
 ---
-status: proposed
+status: superseded by mount-succeeds-only-once
 ---
 
 # 한 Root Instance의 `mount()`는 한 번만 부를 수 있고, 두 번째 호출은 `Error`를 던집니다
