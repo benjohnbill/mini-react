@@ -195,8 +195,4 @@ describe("카운터 데모 페이지", () => {
     );
     expect(getShownCount()).toBeGreaterThanOrEqual(0);
   });
-
-  it.todo(
-    "F113a 근거 없음: jsdom에서 main.ts를 직접 불러오는 테스트는 두지 않습니다 (제안: 위의 두 시작 함수 테스트로 대신함)",
-  );
 });

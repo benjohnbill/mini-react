@@ -1,5 +1,5 @@
 // 테스트는 #30의 seam A로 확인합니다. 입구는 mount와 data-action 요소의 click이고, 출구는 컨테이너 DOM과 함수가 불린 횟수입니다.
-// 예외: Hook 호출 위치(F15, F43~F45), mount 전 update()(F7), 첫 렌더링에서 잡아 둔 오래된 setter(F38, F40)는 그 호출 자체가 대상이므로 useState, setter, update()를 직접 부릅니다.
+// 예외: Hook 호출 위치(F15, F43~F45), mount 전 update()(F7), 첫 렌더링에서 잡아 둔 오래된 setter(F26, F38, F40), 렌더링 밖의 on(F64), Error 뒤의 update()와 잡아 둔 setter(F117, F118, F119~F121, F125~F127, F129, F130, F140)는 그 호출 자체가 대상이므로 useState, setter, update()를 직접 부릅니다.
 // 테스트 ID FN의 N은 #30 표의 행 번호입니다. 같은 행의 두 번째 테스트는 F104a처럼 소문자를 붙입니다.
 import { describe, expect, it } from "vitest";
 import {
@@ -109,8 +109,17 @@ describe("FunctionComponent mount", () => {
     expect(container.querySelector("img")).toBeNull();
   });
 
-  // 같은 인스턴스에 mount를 두 번 부르면 리스너가 두 개 붙습니다. 어떻게 할지 정해진 근거가 없습니다.
-  it.todo("F6 근거 없음: 같은 인스턴스에 mount를 두 번 부르면 Error");
+  it("F6 같은 인스턴스에 mount를 두 번 부르면 Error를 던지고 클릭은 한 번만 처리된다", () => {
+    const container = createContainer();
+    const component = new FunctionComponent(createCounterRootComponent());
+    component.mount(container);
+
+    expect(() => component.mount(container)).toThrow(
+      "mount() can be called only once",
+    );
+    clickButton(container);
+    expect(readButtonText(container)).toBe("1");
+  });
 });
 
 describe("FunctionComponent update", () => {
@@ -243,10 +252,20 @@ describe("FunctionComponent update", () => {
     expect(container.querySelector("button")).toBe(button);
   });
 
-  // 두 Root Instance가 서로 다른 컨테이너에 있을 때 서로 섞이지 않아야 하는지 정해진 근거가 없습니다.
-  it.todo(
-    "F14 근거 없음: Root Instance 두 개를 mount하고 한쪽만 클릭하면 그쪽만 바뀐다",
-  );
+  it("F14 Root Instance 두 개를 mount하고 한쪽만 클릭하면 그쪽만 바뀐다", () => {
+    const first = createContainer();
+    const second = createContainer();
+    new FunctionComponent(createCounterRootComponent()).mount(first);
+    new FunctionComponent(createCounterRootComponent()).mount(second);
+
+    clickButton(first);
+
+    expect(readButtonText(first)).toBe("1");
+    expect(readButtonText(second)).toBe("0");
+    clickButton(second);
+    expect(readButtonText(first)).toBe("1");
+    expect(readButtonText(second)).toBe("1");
+  });
 
   it("F15 Root Component가 렌더링 중 Error를 던지면 Error가 나가고 화면은 직전 View로 남으며, 그 뒤 렌더링 밖 Hook 호출도 Error다", () => {
     const container = createContainer();
@@ -265,6 +284,25 @@ describe("FunctionComponent update", () => {
 
     expect(container.innerHTML).toBe('<button data-action="inc">0</button>');
     expect(() => useState(0)).toThrow(HOOK_OUTSIDE_RENDER_MESSAGE);
+  });
+
+  it("F116 렌더링이 Error로 끝난 뒤에도 직전 렌더링의 클릭 함수가 남아 클릭하면 다시 그린다", () => {
+    const container = createContainer();
+    let setCount: StateSetter<number> | undefined;
+    const rootComponent: RootComponent = ({ on }) => {
+      const [count, setCountOfRender] = useState(0);
+      setCount = setCountOfRender;
+      if (count === 3) {
+        throw new Error("render failed");
+      }
+      return createIncrementButton(on, count, setCountOfRender);
+    };
+    new FunctionComponent(rootComponent).mount(container);
+    expect(() => setCount?.(3)).toThrow("render failed");
+
+    clickButton(container);
+
+    expect(readButtonText(container)).toBe("1");
   });
 
   // 근거: update-before-mount-throws-error
@@ -470,9 +508,28 @@ describe("useState setter", () => {
     expect(readButtonText(container)).toBe("stored function");
   });
 
-  it.todo(
-    "F26 근거 없음: 갱신 함수가 Error를 던지면 Error가 나가고 칸과 화면과 렌더링 횟수는 그대로다",
-  );
+  it("F26 갱신 함수가 Error를 던지면 Error가 나가고 칸과 화면과 렌더링 횟수는 그대로다", () => {
+    const container = createContainer();
+    let renderCount = 0;
+    let setValue: StateSetter<number> | undefined;
+    new FunctionComponent(({ on }) => {
+      renderCount++;
+      const [value, setValueOfRender] = useState(5);
+      setValue = setValueOfRender;
+      return createIncrementButton(on, value, setValueOfRender);
+    }).mount(container);
+
+    expect(() =>
+      setValue?.(() => {
+        throw new Error("updater failed");
+      }),
+    ).toThrow("updater failed");
+
+    expect(readButtonText(container)).toBe("5");
+    expect(renderCount).toBe(1);
+    setValue?.((current) => current + 1);
+    expect(readButtonText(container)).toBe("6");
+  });
 
   it("F38 첫 렌더링의 setter에 함수를 넘기면 칸의 최신 값에서 시작한다", () => {
     const container = createContainer();
@@ -497,7 +554,20 @@ describe("useState setter", () => {
     expect(readButtonText(container)).toBe("6");
   });
 
-  it.todo("F39 근거 없음: setter는 렌더링마다 같은 함수 객체다");
+  it("F39 setter는 렌더링마다 같은 함수 객체다", () => {
+    const setters: StateSetter<number>[] = [];
+    const container = createContainer();
+    new FunctionComponent(({ on }) => {
+      const [count, setCount] = useState(0);
+      setters.push(setCount);
+      return createIncrementButton(on, count, setCount);
+    }).mount(container);
+
+    clickButton(container);
+
+    expect(setters).toHaveLength(2);
+    expect(setters[1]).toBe(setters[0]);
+  });
 
   it("F40 첫 렌더링의 count로 만든 값 형태 함수는 칸을 오래된 값에서 1 더한 값으로 돌린다", () => {
     const container = createContainer();
@@ -522,13 +592,40 @@ describe("useState setter", () => {
     expect(readButtonText(container)).toBe("1");
   });
 
-  it.todo(
-    "F41 근거 없음: Root Component 본문에서 setter를 새 값으로 부르면 Error",
-  );
+  it("F41 Root Component 본문에서 setter를 부르면 Error를 던진다", () => {
+    const component = new FunctionComponent((): VNode => {
+      const [count, setCount] = useState(0);
+      setCount(count + 1);
+      return String(count);
+    });
 
-  it.todo(
-    "F42 근거 없음: 조건에 따라 useState를 건너뛰면 칸이 밀리는 결과를 보인다",
-  );
+    expect(() => component.mount(createContainer())).toThrow(
+      "setters cannot be called while Root Component renders",
+    );
+  });
+
+  it("F42 조건에 따라 useState를 건너뛰면 뒤쪽 Hook이 앞쪽 칸의 값을 받는다", () => {
+    const container = createContainer();
+    new FunctionComponent(({ on }) => {
+      const [show, setShow] = useState(true);
+      const first = show ? useState("first")[0] : "skipped";
+      const [second] = useState("second");
+      on("hide", () => setShow(false));
+      return {
+        type: "div",
+        props: {},
+        children: [
+          createActionButton("hide"),
+          { type: "p", props: {}, children: [`${first},${second}`] },
+        ],
+      };
+    }).mount(container);
+    expect(container.querySelector("p")?.textContent).toBe("first,second");
+
+    clickButton(container);
+
+    expect(container.querySelector("p")?.textContent).toBe("skipped,first");
+  });
 });
 
 describe("useState 초깃값 함수", () => {
@@ -745,9 +842,43 @@ describe("useState 배열 함정", () => {
     expect(readTodos(container)).toEqual(["sleep", "walk"]);
   });
 
-  it.todo(
-    "F34 근거 없음: 같은 배열을 고쳐 넘긴 뒤 다른 칸을 바꾸면 고쳐 둔 배열이 늦게 나타난다",
-  );
+  it("F34 같은 배열을 고쳐 넘긴 뒤 다른 칸을 바꾸면 고쳐 둔 배열이 그때 나타난다", () => {
+    const container = createContainer();
+    new FunctionComponent(({ on }) => {
+      const [todos, setTodos] = useState(["sleep"]);
+      const [count, setCount] = useState(0);
+      on("push", () => {
+        todos.push("walk");
+        setTodos(todos);
+      });
+      on("count", () => setCount(count + 1));
+      return {
+        type: "div",
+        props: {},
+        children: [
+          createActionButton("push"),
+          createActionButton("count"),
+          {
+            type: "ul",
+            props: {},
+            children: todos.map(
+              (todo): VNode => ({ type: "li", props: {}, children: [todo] }),
+            ),
+          },
+        ],
+      };
+    }).mount(container);
+    const clickAction = (actionName: string) =>
+      container
+        .querySelector<HTMLElement>(`[data-action="${actionName}"]`)
+        ?.click();
+
+    clickAction("push");
+    expect(readTodos(container)).toEqual(["sleep"]);
+    clickAction("count");
+
+    expect(readTodos(container)).toEqual(["sleep", "walk"]);
+  });
 });
 
 describe("Hook 호출 위치", () => {
@@ -805,10 +936,6 @@ describe("Hook 호출 위치", () => {
     expect(() => useEffect(() => {})).toThrow(HOOK_OUTSIDE_RENDER_MESSAGE);
     expect(() => useMemo(() => 1, [])).toThrow(HOOK_OUTSIDE_RENDER_MESSAGE);
   });
-
-  it.todo(
-    "F48 근거 없음: useMemo의 계산 함수 안에서 useState를 부르면 칸을 하나 쓴다 (티켓 #35 뒤에 쓴다)",
-  );
 });
 
 describe("FunctionComponent click wiring", () => {
@@ -862,10 +989,6 @@ describe("FunctionComponent click wiring", () => {
     expect(clickCount).toBe(1);
   });
 
-  it.todo(
-    "F51 근거 없음: 버튼 안의 글자 노드를 대상으로 click 이벤트를 보내면 부모 요소에서 찾아 함수가 한 번 불린다",
-  );
-
   it("F52 data-action이 겹치면 가장 가까운 안쪽 이름의 함수만 불린다", () => {
     const calledNames: string[] = [];
     const { container } = mountActionTree(({ on }) => {
@@ -895,8 +1018,6 @@ describe("FunctionComponent click wiring", () => {
       '<button data-action="nope">nope</button>',
     );
   });
-
-  it.todo('F54 근거 없음: data-action=""을 클릭하면 아무 일도 일어나지 않는다');
 
   it("F55 data-action이 없는 요소를 클릭하면 등록한 함수가 불리지 않는다", () => {
     let clickCount = 0;
@@ -1005,9 +1126,19 @@ describe("FunctionComponent click wiring", () => {
     expect(onceCount).toBe(0);
   });
 
-  it.todo(
-    "F61 근거 없음: 한 렌더링에서 같은 이름을 두 번 등록하면 나중에 등록한 함수만 불린다",
-  );
+  it("F61 한 렌더링에서 같은 이름을 두 번 등록하면 나중에 등록한 함수만 불린다", () => {
+    const calls: string[] = [];
+    const container = createContainer();
+    new FunctionComponent(({ on }) => {
+      on("go", () => calls.push("first"));
+      on("go", () => calls.push("second"));
+      return createActionButton("go");
+    }).mount(container);
+
+    clickButton(container);
+
+    expect(calls).toEqual(["second"]);
+  });
 
   it("F62 다섯 번 다시 그린 뒤 클릭하면 클릭 함수가 정확히 한 번 불린다", () => {
     let targetCount = 0;
@@ -1051,11 +1182,17 @@ describe("FunctionComponent click wiring", () => {
     expect(calledNames).toEqual(["a", "b"]);
   });
 
-  it.todo("F64 근거 없음: 클릭 함수나 effect 안에서 잡아 둔 on을 부르면 Error");
+  it("F64 렌더링 밖에서 잡아 둔 on을 부르면 Error를 던진다", () => {
+    let capturedOn: RootComponentProps["on"] | undefined;
+    new FunctionComponent(({ on }) => {
+      capturedOn = on;
+      return "view";
+    }).mount(createContainer());
 
-  it.todo(
-    "F65 근거 없음: 클릭 함수가 Error를 던진 뒤 다른 버튼 클릭도 정상으로 처리된다",
-  );
+    expect(() => capturedOn?.("late", () => {})).toThrow(
+      "on() can only be called while Root Component renders",
+    );
+  });
 
   it("F66 data-action 요소에 dblclick과 input 이벤트를 보내도 등록한 함수가 불리지 않는다", () => {
     let calledCount = 0;
@@ -1574,25 +1711,44 @@ describe("useEffect 안의 setter와 오류", () => {
     expect(log).toHaveLength(4);
   });
 
-  it("F91 []인 effect A가 setter를 부르고 deps 없는 effect B가 뒤에 있으면, 최종 화면은 새 값이고 B는 두 번 불린다", () => {
+  it("F91 []인 effect A가 setter를 부르고 deps 없는 effect B가 뒤에 있으면, 최종 화면은 새 값이고 B는 새 값으로 한 번만 불린다", () => {
     const { container, log } = mountEffectRoot((_props, log) => {
       const [value, setValue] = useState("old");
       useEffect(() => {
         setValue("new");
       }, []);
       useEffect(() => {
-        log.push("b");
+        log.push(`b ${value}`);
       });
       return { type: "p", props: {}, children: [value] };
     });
 
     expect(container.textContent).toBe("new");
-    expect(log).toEqual(["b", "b"]);
+    expect(log).toEqual(["b new"]);
   });
 
-  it.todo(
-    "F92 deps 없는 effect가 매번 새 값으로 setter를 부르면 끝없이 반복된다 (막지 않으며, 테스트하면 멈추지 않음)",
-  );
+  it("F91a 중첩 update()가 다시 예약한 effect의 정리 함수는 다음 렌더링에서 새 값으로 불린다", () => {
+    const container = createContainer();
+    const log: string[] = [];
+    const component = new FunctionComponent((): VNode => {
+      const [value, setValue] = useState("old");
+      useEffect(() => {
+        setValue("new");
+      }, []);
+      useEffect(() => {
+        log.push(`b ${value}`);
+        return () => {
+          log.push(`cleanup ${value}`);
+        };
+      });
+      return { type: "p", props: {}, children: [value] };
+    });
+    component.mount(container);
+
+    component.update();
+
+    expect(log).toEqual(["b new", "cleanup new", "b new"]);
+  });
 
   it("F93 effect가 Error를 던지면 mount에서 그 Error가 나가고 DOM은 이미 첫 View다", () => {
     const container = createContainer();
@@ -1775,5 +1931,572 @@ describe("Hook 섞어 부르기", () => {
     click("inc");
 
     expect(log).toEqual(["effect 0", "effect 1"]);
+  });
+});
+
+type ErrorMode = "ok" | "render-error" | "effect-error";
+
+// 매 렌더링의 결과를 control이 정합니다. effect와 정리 함수가 불린 순서는 log에 남습니다.
+function mountErrorModeRoot() {
+  const container = createContainer();
+  const log: string[] = [];
+  const control = { mode: "ok" as ErrorMode, label: "v1" };
+  const component = new FunctionComponent((): VNode => {
+    log.push("render");
+    useEffect(() => {
+      log.push("effect");
+      if (control.mode === "effect-error") {
+        throw new Error("effect failed");
+      }
+      return () => {
+        log.push("cleanup");
+      };
+    });
+    if (control.mode === "render-error") {
+      throw new Error("render failed");
+    }
+    return { type: "p", props: {}, children: [control.label] };
+  });
+  component.mount(container);
+  return { container, log, control, component };
+}
+
+describe("Error 뒤의 화면과 effect", () => {
+  it("F117 update()에서 effect가 Error를 던지면 update()가 그 Error를 던지고 DOM은 이미 새 View다", () => {
+    const { container, control, component } = mountErrorModeRoot();
+    control.mode = "effect-error";
+    control.label = "v2";
+
+    expect(() => component.update()).toThrow("effect failed");
+
+    expect(container.textContent).toBe("v2");
+  });
+
+  it("F118 setter가 시작한 update()에서 effect가 Error를 던지면 setter가 그 Error를 던지고 DOM은 이미 새 View다", () => {
+    const container = createContainer();
+    let setCount: StateSetter<number> | undefined;
+    new FunctionComponent((): VNode => {
+      const [count, setCountOfRender] = useState(0);
+      setCount = setCountOfRender;
+      useEffect(() => {
+        if (count === 1) {
+          throw new Error("effect failed");
+        }
+      }, [count]);
+      return { type: "p", props: {}, children: [String(count)] };
+    }).mount(container);
+
+    expect(() => setCount?.(1)).toThrow("effect failed");
+
+    expect(container.textContent).toBe("1");
+  });
+
+  it("F119 effect 세 개 중 두 번째가 Error를 던지면 첫 번째는 불리고 세 번째는 불리지 않는다", () => {
+    const container = createContainer();
+    const log: string[] = [];
+    const control = { fail: false };
+    const component = new FunctionComponent((): VNode => {
+      useEffect(() => {
+        log.push("e1");
+      });
+      useEffect(() => {
+        log.push("e2");
+        if (control.fail) {
+          throw new Error("e2 failed");
+        }
+      });
+      useEffect(() => {
+        log.push("e3");
+      });
+      return "view";
+    });
+    component.mount(container);
+    log.length = 0;
+    control.fail = true;
+
+    expect(() => component.update()).toThrow("e2 failed");
+
+    expect(log).toEqual(["e1", "e2"]);
+  });
+
+  it("F120 render가 Error를 던지면 effect도 정리 함수도 불리지 않는다", () => {
+    const { log, control, component } = mountErrorModeRoot();
+    log.length = 0;
+    control.mode = "render-error";
+
+    expect(() => component.update()).toThrow("render failed");
+
+    expect(log).toEqual(["render"]);
+  });
+
+  it("F121 다시 불릴 effect가 Error를 던져도 그 전에 정리 함수는 모두 불려 있다", () => {
+    const container = createContainer();
+    const log: string[] = [];
+    const control = { fail: false };
+    const component = new FunctionComponent((): VNode => {
+      useEffect(() => {
+        log.push("e1");
+        return () => {
+          log.push("c1");
+        };
+      });
+      useEffect(() => {
+        log.push("e2");
+        if (control.fail) {
+          throw new Error("e2 failed");
+        }
+        return () => {
+          log.push("c2");
+        };
+      });
+      return "view";
+    });
+    component.mount(container);
+    log.length = 0;
+    control.fail = true;
+
+    expect(() => component.update()).toThrow("e2 failed");
+
+    expect(log).toEqual(["c1", "c2", "e1", "e2"]);
+  });
+
+  it("F122 render Error 다음 effect Error가 나도 DOM은 마지막으로 그린 View이고, 그 다음 update()는 정상이다", () => {
+    const { container, control, component } = mountErrorModeRoot();
+
+    control.mode = "render-error";
+    control.label = "v2";
+    expect(() => component.update()).toThrow("render failed");
+    expect(container.textContent).toBe("v1");
+
+    control.mode = "effect-error";
+    control.label = "v3";
+    expect(() => component.update()).toThrow("effect failed");
+    expect(container.textContent).toBe("v3");
+
+    control.mode = "ok";
+    control.label = "v4";
+    component.update();
+    expect(container.textContent).toBe("v4");
+  });
+
+  it("F123 effect Error 다음 render Error가 나면 DOM은 effect가 던지기 전에 반영한 View로 남는다", () => {
+    const { container, control, component } = mountErrorModeRoot();
+
+    control.mode = "effect-error";
+    control.label = "v2";
+    expect(() => component.update()).toThrow("effect failed");
+
+    control.mode = "render-error";
+    control.label = "v3";
+    expect(() => component.update()).toThrow("render failed");
+
+    expect(container.textContent).toBe("v2");
+  });
+
+  it("F124 render가 Error를 던지기 전에 on으로 등록한 함수는 남지 않고 직전 렌더링의 함수가 불린다", () => {
+    const container = createContainer();
+    const calls: string[] = [];
+    const control = { version: "v1", fail: false };
+    const component = new FunctionComponent(({ on }): VNode => {
+      const version = control.version;
+      on("x", () => {
+        calls.push(version);
+      });
+      if (control.fail) {
+        throw new Error("render failed");
+      }
+      return createActionButton("x");
+    });
+    component.mount(container);
+    control.version = "v2";
+    control.fail = true;
+    expect(() => component.update()).toThrow("render failed");
+
+    clickButton(container);
+
+    expect(calls).toEqual(["v1"]);
+  });
+
+  it("F125 render가 Error를 던진 뒤에도 칸은 새 값으로 남아, 다음 갱신 함수는 그 값에서 시작하고 DOM은 직전에 그린 View와 비교된다", () => {
+    const container = createContainer();
+    let setCount: StateSetter<number> | undefined;
+    new FunctionComponent((): VNode => {
+      const [count, setCountOfRender] = useState(2);
+      setCount = setCountOfRender;
+      if (count === 3) {
+        throw new Error("render failed");
+      }
+      return { type: "p", props: {}, children: [String(count)] };
+    }).mount(container);
+
+    expect(() => setCount?.(3)).toThrow("render failed");
+    expect(container.textContent).toBe("2");
+
+    setCount?.((count) => count + 1);
+
+    expect(container.textContent).toBe("4");
+  });
+
+  it("F126 render가 Error를 던진 뒤 칸과 같은 값을 넘기면 다시 그리지 않는다", () => {
+    const container = createContainer();
+    const renders = { count: 0 };
+    let setCount: StateSetter<number> | undefined;
+    new FunctionComponent((): VNode => {
+      renders.count++;
+      const [count, setCountOfRender] = useState(2);
+      setCount = setCountOfRender;
+      if (count === 3) {
+        throw new Error("render failed");
+      }
+      return { type: "p", props: {}, children: [String(count)] };
+    }).mount(container);
+    expect(() => setCount?.(3)).toThrow("render failed");
+    const rendersBefore = renders.count;
+
+    setCount?.(3);
+
+    expect(renders.count).toBe(rendersBefore);
+    expect(container.textContent).toBe("2");
+  });
+
+  it("F127 한 클릭 안에서 두 번째 갱신 함수가 Error를 던지면 첫 setter의 결과는 이미 그려졌고 세 번째는 불리지 않으며, 그 뒤 setter는 정상이다", () => {
+    const container = createContainer();
+    let setA: StateSetter<number> | undefined;
+    let setB: StateSetter<number> | undefined;
+    let setC: StateSetter<number> | undefined;
+    new FunctionComponent((): VNode => {
+      const [a, setAOfRender] = useState(0);
+      const [b, setBOfRender] = useState(0);
+      const [c, setCOfRender] = useState(0);
+      setA = setAOfRender;
+      setB = setBOfRender;
+      setC = setCOfRender;
+      return { type: "p", props: {}, children: [`${a},${b},${c}`] };
+    }).mount(container);
+
+    expect(() => {
+      setA?.(1);
+      setB?.(() => {
+        throw new Error("updater failed");
+      });
+      setC?.(1);
+    }).toThrow("updater failed");
+    expect(container.textContent).toBe("1,0,0");
+
+    setB?.((current) => current + 5);
+
+    expect(container.textContent).toBe("1,5,0");
+  });
+
+  it("F128 자식 Component 본문이 Error를 던지면 Error가 나가고 화면은 직전 View로 남는다", () => {
+    const container = createContainer();
+    const control = { fail: false };
+    const component = new FunctionComponent((): VNode => {
+      const child = (): VNode => {
+        if (control.fail) {
+          throw new Error("child failed");
+        }
+        return { type: "span", props: {}, children: ["child"] };
+      };
+      return { type: "p", props: {}, children: [child()] };
+    });
+    component.mount(container);
+    control.fail = true;
+
+    expect(() => component.update()).toThrow("child failed");
+
+    expect(container.innerHTML).toBe("<p><span>child</span></p>");
+  });
+
+  it("F129 Root Component 본문에서 setter를 부르면 Error가 나가고, 화면과 클릭 함수는 직전 렌더링의 것이며 칸은 쓰이지 않는다", () => {
+    const container = createContainer();
+    const calls: string[] = [];
+    const control = { callSetter: false };
+    let setCount: StateSetter<number> | undefined;
+    const component = new FunctionComponent(({ on }): VNode => {
+      const [count, setCountOfRender] = useState(0);
+      setCount = setCountOfRender;
+      if (control.callSetter) {
+        setCount(9);
+      }
+      on("x", () => {
+        calls.push(`click ${count}`);
+      });
+      return {
+        type: "button",
+        props: { "data-action": "x" },
+        children: [String(count)],
+      };
+    });
+    component.mount(container);
+    control.callSetter = true;
+
+    expect(() => component.update()).toThrow(
+      "setters cannot be called while Root Component renders",
+    );
+    clickButton(container);
+    control.callSetter = false;
+    component.update();
+
+    expect(calls).toEqual(["click 0"]);
+    expect(container.textContent).toBe("0");
+  });
+
+  it("F130 자식 Component 본문과 useMemo의 계산 함수에서 setter를 불러도 Error가 나고 칸은 쓰이지 않는다", () => {
+    const container = createContainer();
+    const control = { inChild: false, inMemo: false };
+    const component = new FunctionComponent((): VNode => {
+      const [count, setCountOfRender] = useState(0);
+      useMemo(() => {
+        if (control.inMemo) {
+          setCountOfRender(9);
+        }
+      });
+      const child = (): VNode => {
+        if (control.inChild) {
+          setCountOfRender(9);
+        }
+        return { type: "span", props: {}, children: [String(count)] };
+      };
+      return { type: "p", props: {}, children: [child()] };
+    });
+    component.mount(container);
+
+    control.inChild = true;
+    expect(() => component.update()).toThrow(
+      "setters cannot be called while Root Component renders",
+    );
+    control.inChild = false;
+    control.inMemo = true;
+    expect(() => component.update()).toThrow(
+      "setters cannot be called while Root Component renders",
+    );
+    control.inMemo = false;
+    component.update();
+
+    expect(container.textContent).toBe("0");
+  });
+
+  it("F131 effect 안의 setter가 시작한 render가 Error를 던지면 그 Error가 mount 밖으로 나가고 뒤의 effect는 불리지 않는다", () => {
+    const container = createContainer();
+    const log: string[] = [];
+    const component = new FunctionComponent((): VNode => {
+      const [value, setValue] = useState(0);
+      useEffect(() => {
+        log.push("a");
+        setValue(1);
+      }, []);
+      useEffect(() => {
+        log.push("b");
+      }, []);
+      if (value === 1) {
+        throw new Error("render failed");
+      }
+      return "view";
+    });
+
+    expect(() => component.mount(container)).toThrow("render failed");
+
+    expect(log).toEqual(["a"]);
+  });
+
+  it("F132 effect 안에서 부른 갱신 함수가 Error를 던지면 그 Error가 mount 밖으로 나가고 뒤의 effect는 불리지 않는다", () => {
+    const container = createContainer();
+    const log: string[] = [];
+    const component = new FunctionComponent((): VNode => {
+      const [, setValue] = useState(0);
+      useEffect(() => {
+        log.push("a");
+        setValue(() => {
+          throw new Error("updater failed");
+        });
+      }, []);
+      useEffect(() => {
+        log.push("b");
+      }, []);
+      return "view";
+    });
+
+    expect(() => component.mount(container)).toThrow("updater failed");
+
+    expect(log).toEqual(["a"]);
+  });
+
+  it("F139 render가 Hook 호출 중간에 Error를 던진 뒤 다음 렌더링도 Hook 번호를 0부터 다시 센다", () => {
+    const container = createContainer();
+    const control = { fail: false };
+    let setA: StateSetter<number> | undefined;
+    const component = new FunctionComponent((): VNode => {
+      const [a, setAOfRender] = useState(1);
+      setA = setAOfRender;
+      const [b] = useState(2);
+      if (control.fail) {
+        throw new Error("render failed");
+      }
+      const [c] = useState(3);
+      return { type: "p", props: {}, children: [`${a},${b},${c}`] };
+    });
+    component.mount(container);
+    setA?.(10);
+    control.fail = true;
+    expect(() => component.update()).toThrow("render failed");
+    control.fail = false;
+
+    component.update();
+
+    expect(container.textContent).toBe("10,2,3");
+  });
+});
+
+describe("함정 한 줄짜리 CAUTION", () => {
+  it("F133 deps에 setter를 넣은 effect는 몇 번을 다시 그려도 한 번만 불린다", () => {
+    const { log, click } = mountEffectRoot(({ on }, log) => {
+      const [count, setCount] = useState(0);
+      useEffect(() => {
+        log.push("effect");
+      }, [setCount]);
+      return createIncrementButton(on, count, setCount);
+    });
+
+    click("inc");
+    click("inc");
+
+    expect(log).toEqual(["effect"]);
+  });
+
+  it("F134 계산 함수가 쓰는 값을 deps에서 빼면 값이 바뀌어도 화면에 옛 결과가 남는다", () => {
+    const { container, click } = mountEffectRoot(({ on }) => {
+      const [count, setCount] = useState(0);
+      const doubled = useMemo(() => count * 2, []);
+      on("inc", () => setCount(count + 1));
+      return {
+        type: "button",
+        props: { "data-action": "inc" },
+        children: [`${count},${doubled}`],
+      };
+    });
+
+    click("inc");
+
+    expect(container.textContent).toBe("1,0");
+  });
+
+  it("F135 deps에 매번 새 객체를 넣은 effect는 deps를 생략한 것처럼 다시 그릴 때마다 불린다", () => {
+    const { log, click } = mountEffectRoot(({ on }, log) => {
+      const [count, setCount] = useState(0);
+      useEffect(() => {
+        log.push("effect");
+      }, [{}]);
+      return createIncrementButton(on, count, setCount);
+    });
+
+    click("inc");
+    click("inc");
+
+    expect(log).toEqual(["effect", "effect", "effect"]);
+  });
+
+  it("F136 deps에 매번 새 배열을 넣은 useMemo는 다시 그릴 때마다 다시 계산한다", () => {
+    const { log, click } = mountEffectRoot(({ on }, log) => {
+      const [count, setCount] = useState(0);
+      useMemo(() => {
+        log.push("compute");
+      }, [[]]);
+      return createIncrementButton(on, count, setCount);
+    });
+
+    click("inc");
+    click("inc");
+
+    expect(log).toEqual(["compute", "compute", "compute"]);
+  });
+
+  it("F137 async effect는 Error 없이 불리고, Promise가 돌려준 함수는 정리 함수로 불리지 않는다", async () => {
+    const { log, click } = mountEffectRoot(({ on }, log) => {
+      const [count, setCount] = useState(0);
+      useEffect((async () => {
+        log.push("effect");
+        return () => {
+          log.push("cleanup");
+        };
+      }) as unknown as () => undefined);
+      return createIncrementButton(on, count, setCount);
+    });
+
+    click("inc");
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(log).toEqual(["effect", "effect"]);
+  });
+});
+
+describe("Error 뒤의 인스턴스 상태", () => {
+  it("F140 render가 Error를 던지기 전에 부른 useEffect는 deps를 기록하지 않아, 다음에 성공한 렌더링에서 불린다", () => {
+    const container = createContainer();
+    const log: string[] = [];
+    const control = { fail: false };
+    let setCount: StateSetter<number> | undefined;
+    const component = new FunctionComponent((): VNode => {
+      const [count, setCountOfRender] = useState(0);
+      setCount = setCountOfRender;
+      useEffect(() => {
+        log.push(`effect ${count}`);
+      }, [count]);
+      if (control.fail) {
+        throw new Error("render failed");
+      }
+      return { type: "p", props: {}, children: [String(count)] };
+    });
+    component.mount(container);
+    control.fail = true;
+    expect(() => setCount?.(1)).toThrow("render failed");
+    control.fail = false;
+
+    component.update();
+
+    expect(log).toEqual(["effect 0", "effect 1"]);
+  });
+
+  it("F141 effect가 Error를 던지면 그 effect와 뒤의 effect는 deps가 같은 동안 다시 불리지 않는다", () => {
+    const container = createContainer();
+    const log: string[] = [];
+    const control = { fail: true };
+    const component = new FunctionComponent((): VNode => {
+      useEffect(() => {
+        log.push("a");
+        if (control.fail) {
+          throw new Error("a failed");
+        }
+      }, []);
+      useEffect(() => {
+        log.push("b");
+      }, []);
+      return "view";
+    });
+    expect(() => component.mount(container)).toThrow("a failed");
+    control.fail = false;
+
+    component.update();
+
+    expect(log).toEqual(["a"]);
+  });
+
+  it("F142 첫 mount()가 render Error로 끝나면 컨테이너는 그대로이고, 같은 인스턴스의 mount()와 update()는 모두 Error다", () => {
+    const container = createContainer("<i>old</i>");
+    const control = { fail: true };
+    const component = new FunctionComponent((): VNode => {
+      if (control.fail) {
+        throw new Error("render failed");
+      }
+      return "view";
+    });
+    expect(() => component.mount(container)).toThrow("render failed");
+    control.fail = false;
+
+    expect(() => component.mount(container)).toThrow(
+      "mount() can be called only once",
+    );
+    expect(() => component.update()).toThrow("update() needs mount() first");
+    expect(container.innerHTML).toBe("<i>old</i>");
   });
 });

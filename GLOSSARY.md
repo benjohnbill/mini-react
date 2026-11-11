@@ -39,7 +39,7 @@ mini-react 코드에서 쓰는 이름을 고정합니다. 쓰는 법은 `CONVENT
 | **클릭 함수** | `on(name, handler)`으로 이름을 붙여 등록해, 그 이름의 `data-action` 요소가 클릭될 때 불리는 함수입니다. | `ActionHandler` |
 | **갱신 함수** | setter에 값 대신 넘기는 `(현재 값) => 새 값` 함수로, setter가 칸의 현재 값으로 불러 그 결과를 새 값으로 씁니다. | |
 | **FunctionComponent** | Root Component를 감싸 `hooks`를 보관하고 `mount()`와 `update()`로 그리는 클래스입니다. | `FunctionComponent` |
-| **Root Instance** | Root Component를 감싼 `FunctionComponent`의 인스턴스로, 앱에 하나만 있고 모든 setter가 이 인스턴스의 `update()`를 부릅니다. `container`와 다릅니다. | |
+| **Root Instance** | Root Component를 감싼 `FunctionComponent`의 인스턴스로, 앱에 여러 개 있을 수 있고 각 setter는 자기 인스턴스의 `update()`를 부릅니다. `container`와 다릅니다. | |
 | **렌더링** | Root Component를 불러 새 `View`를 돌려받는 일입니다. DOM에 그리는 일은 포함하지 않습니다. | `renderedView` |
 | **State(상태)** | 렌더링과 렌더링 사이에 남는 값으로, 칸 하나에 하나씩 들어 있습니다. | `StateCell`의 `value` |
 | **hooks** | `FunctionComponent`에서 상태를 Hook 호출 순서대로 담는 배열입니다. | `FunctionComponent`의 `hooks` |
