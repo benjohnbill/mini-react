@@ -32,6 +32,7 @@ mini-react/
 │   ├── test-pages/        검증 페이지와 데모 페이지 코드와 테스트
 │   └── *.test.ts          테스트는 소스 옆에 둠
 ├── docs/adr/              되돌리기 어려운 결정과 이유. 폴더는 데이터가 지나가는 단계(docs/adr/README.md). 끝 두 줄의 ID = 지키는 테스트
+├── docs/requirements/     LMS 문장마다 충족 판정과 근거 ADR (phase-1.md, phase-2.md)
 ├── scripts/
 │   └── check-decision-links.mjs   ADR이 인용한 테스트 ID 확인. npm run check가 부름
 ├── .github/               PR 템플릿, CI(PR과 main push마다 검사)
