@@ -17,6 +17,40 @@ mini-react 코드에서 쓰는 이름을 고정합니다. 쓰는 법은 `CONVENT
 
 | 용어 | 뜻 | 코드 |
 |---|---|---|
-| **검증 페이지** | Phase 1의 기능을 화면에서 확인하는 페이지로, 실제 영역, 테스트 영역, 뒤로가기·Patch·앞으로가기 버튼이 있습니다. | `startVerificationPage` |
+| **검증 페이지** | Phase 1의 기능을 화면에서 확인하는 페이지로, 실제 영역, 테스트 영역, 뒤로가기·Patch·앞으로가기 버튼이 있습니다. 데모 페이지와 다릅니다. | `startVerificationPage` |
 | **실제 영역** | 검증 페이지에서 Patch가 반영되는 `container`입니다. | `real` |
 | **테스트 영역** | 검증 페이지에서 사용자가 HTML을 고치는 입력란이며, Patch를 누르기 전에는 실제 영역에 반영되지 않습니다. | `test` |
+
+## 데모 페이지
+
+| 용어 | 뜻 | 코드 |
+|---|---|---|
+| **데모 페이지** | `index.html`의 `#demo`에 카운터 Root Component를 `mount`해 Phase 2를 화면에서 확인하는 페이지입니다. 검증 페이지와 다릅니다. | `startDemoPage` |
+
+## Component와 상태
+
+| 용어 | 뜻 | 코드 |
+|---|---|---|
+| **Component** | props를 받아 `VNode`를 돌려주는 함수로, 렌더링마다 처음부터 다시 실행되므로 스스로는 상태를 기억하지 못합니다(LMS의 "함수형 컴포넌트"). | |
+| **Root Component** | Component 트리의 맨 위에 있고 상태를 가지기로 약속한 유일한 Component입니다. 코드는 자식 Component의 Hook 호출을 막지 않습니다([`hook-rule-kept-by-convention`](docs/adr/render/hook-rule-kept-by-convention.md)). `container`와 다릅니다. | `RootComponent` |
+| **자식 Component** | Root Component 본문에서 직접 불리는 Component로, 상태 없이 props만 씁니다. | |
+| **props** | Component가 받는 인자 객체입니다. Root Component의 props는 `on` 하나입니다. | |
+| **on** | Root Component의 props로 받아 렌더링 중에 클릭 함수를 이름으로 등록하는 함수입니다. | `RootComponentProps`의 `on` |
+| **클릭 함수** | `on(name, handler)`으로 이름을 붙여 등록해, 그 이름의 `data-action` 요소가 클릭될 때 불리는 함수입니다. | `ActionHandler` |
+| **갱신 함수** | setter에 값 대신 넘기는 `(현재 값) => 새 값` 함수로, setter가 칸의 현재 값으로 불러 그 결과를 새 값으로 씁니다. | |
+| **FunctionComponent** | Root Component를 감싸 `hooks`를 보관하고 `mount()`와 `update()`로 그리는 클래스입니다. | `FunctionComponent` |
+| **Root Instance** | Root Component를 감싼 `FunctionComponent`의 인스턴스로, 앱에 하나만 있고 모든 setter가 이 인스턴스의 `update()`를 부릅니다. `container`와 다릅니다. | |
+| **렌더링** | Root Component를 불러 새 `View`를 돌려받는 일입니다. DOM에 그리는 일은 포함하지 않습니다. | `renderedView` |
+| **State(상태)** | 렌더링과 렌더링 사이에 남는 값으로, 칸 하나에 하나씩 들어 있습니다. | `HookCell`의 `value` |
+| **hooks** | `FunctionComponent`에서 상태를 Hook 호출 순서대로 담는 배열입니다. | `FunctionComponent`의 `hooks` |
+| **칸** | `hooks`의 한 자리로, Hook 호출 하나의 값을 담습니다. | `HookCell` |
+| **Hook** | 렌더링 중에만 부를 수 있고 칸 하나를 쓰는 함수의 종류입니다(`useState`, `useEffect`, `useMemo`). | |
+| **useState** | 자기 칸의 State와, 그 State를 바꾸는 setter를 돌려주는 Hook입니다. | `useState` |
+| **setter** | `useState`가 돌려주는 함수로, 새 값이나 갱신 함수를 받아 칸을 바꾸고 `update()`를 부릅니다. | `StateSetter` |
+
+## 테스트
+
+| 용어 | 뜻 | 코드 |
+|---|---|---|
+| **단위 테스트** | 내보낸 함수 하나를 불러 그 결과를 확인하는 테스트입니다. | |
+| **기능 테스트** | `index.html`과 같은 마크업에서 페이지 시작 함수를 부르고, 클릭으로 화면이 바뀌는지 확인하는 테스트입니다(jsdom). | |
