@@ -41,11 +41,17 @@ mini-react 코드에서 쓰는 이름을 고정합니다. 쓰는 법은 `CONVENT
 | **FunctionComponent** | Root Component를 감싸 `hooks`를 보관하고 `mount()`와 `update()`로 그리는 클래스입니다. | `FunctionComponent` |
 | **Root Instance** | Root Component를 감싼 `FunctionComponent`의 인스턴스로, 앱에 하나만 있고 모든 setter가 이 인스턴스의 `update()`를 부릅니다. `container`와 다릅니다. | |
 | **렌더링** | Root Component를 불러 새 `View`를 돌려받는 일입니다. DOM에 그리는 일은 포함하지 않습니다. | `renderedView` |
-| **State(상태)** | 렌더링과 렌더링 사이에 남는 값으로, 칸 하나에 하나씩 들어 있습니다. | `HookCell`의 `value` |
+| **State(상태)** | 렌더링과 렌더링 사이에 남는 값으로, 칸 하나에 하나씩 들어 있습니다. | `StateCell`의 `value` |
 | **hooks** | `FunctionComponent`에서 상태를 Hook 호출 순서대로 담는 배열입니다. | `FunctionComponent`의 `hooks` |
 | **칸** | `hooks`의 한 자리로, Hook 호출 하나의 값을 담습니다. | `HookCell` |
 | **Hook** | 렌더링 중에만 부를 수 있고 칸 하나를 쓰는 함수의 종류입니다(`useState`, `useEffect`, `useMemo`). | |
 | **useState** | 자기 칸의 State와, 그 State를 바꾸는 setter를 돌려주는 Hook입니다. | `useState` |
+| **useEffect** | effect와 deps를 받아, deps가 바뀐 렌더링의 DOM 반영 직후 effect를 부르게 하는 Hook입니다. | `useEffect` |
+| **effect** | `useEffect`에 넘겨 DOM 반영 직후에 부르게 하는 함수입니다. | `Effect` |
+| **정리 함수** | effect가 돌려주는 함수로, 같은 effect가 다시 실행되기 직전에 불립니다. | `Cleanup` |
+| **deps** | `useEffect`와 `useMemo`가 다시 실행할지 정하려고 렌더링마다 비교하는 값의 배열입니다. | `Deps` |
+| **생명주기** | Root Instance가 effect를 부르는 시점으로, `mount()` 직후와 `update()` 직후 두 가지이며 unmount는 없습니다(LMS의 "생명주기"). | `runPendingEffects` |
+| **useMemo** | 계산 함수와 deps를 받아, deps가 바뀐 렌더링에서만 다시 계산한 값을 돌려주는 Hook입니다. | `useMemo` |
 | **setter** | `useState`가 돌려주는 함수로, 새 값이나 갱신 함수를 받아 칸을 바꾸고 `update()`를 부릅니다. | `StateSetter` |
 
 ## 테스트

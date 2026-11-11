@@ -7,6 +7,8 @@ import {
   type RootComponent,
   type RootComponentProps,
   type StateSetter,
+  useEffect,
+  useMemo,
   useState,
 } from "./function-component";
 import type { VNode } from "./vnode";
@@ -786,13 +788,23 @@ describe("Hook 호출 위치", () => {
     expect(renderCount).toBe(1);
   });
 
-  it.todo(
-    "F46 effect 함수 안에서 useState를 부르면 Error (useEffect 티켓 #34 뒤에 쓴다)",
-  );
+  it("F46 effect 함수 안에서 useState를 부르면 Error가 난다", () => {
+    const component = new FunctionComponent((): VNode => {
+      useEffect(() => {
+        useState(0);
+      }, []);
+      return "view";
+    });
 
-  it.todo(
-    "F47 렌더링 밖에서 useEffect와 useMemo를 부르면 각각 Error (티켓 #34와 #35 뒤에 쓴다)",
-  );
+    expect(() => component.mount(createContainer())).toThrow(
+      HOOK_OUTSIDE_RENDER_MESSAGE,
+    );
+  });
+
+  it("F47 렌더링 밖에서 useEffect와 useMemo를 부르면 각각 Error가 난다", () => {
+    expect(() => useEffect(() => {})).toThrow(HOOK_OUTSIDE_RENDER_MESSAGE);
+    expect(() => useMemo(() => 1, [])).toThrow(HOOK_OUTSIDE_RENDER_MESSAGE);
+  });
 
   it.todo(
     "F48 근거 없음: useMemo의 계산 함수 안에서 useState를 부르면 칸을 하나 쓴다 (티켓 #35 뒤에 쓴다)",
@@ -1172,5 +1184,596 @@ describe("상태 없는 자식 Component", () => {
     clickButton(container);
 
     expect(container.querySelector("p")?.textContent).toBe("child");
+  });
+});
+
+type EffectRoot = {
+  container: HTMLElement;
+  log: string[];
+  renders: { count: number };
+  click: (actionName: string) => void;
+};
+
+// Root Component를 mount하고, 이름을 넣는 기록 배열과 렌더링 횟수와 data-action 클릭 함수를 돌려줍니다.
+function mountEffectRoot(
+  createView: (
+    props: RootComponentProps,
+    log: string[],
+    container: HTMLElement,
+  ) => VNode,
+): EffectRoot {
+  const container = createContainer();
+  const log: string[] = [];
+  const renders = { count: 0 };
+  new FunctionComponent((props) => {
+    renders.count++;
+    return createView(props, log, container);
+  }).mount(container);
+  const click = (actionName: string) => {
+    const element = container.querySelector(`[data-action="${actionName}"]`);
+    if (!(element instanceof HTMLElement)) {
+      throw new Error(`container has no ${actionName}`);
+    }
+    element.click();
+  };
+  return { container, log, renders, click };
+}
+
+// 칸 두 개(count와 other)와 각자를 1 늘리는 버튼 inc, other를 그립니다.
+function createTwoCounterView(
+  on: RootComponentProps["on"],
+  count: number,
+  setCount: StateSetter<number>,
+  other: number,
+  setOther: StateSetter<number>,
+): VNode {
+  on("inc", () => setCount(count + 1));
+  on("other", () => setOther(other + 1));
+  return {
+    type: "div",
+    props: {},
+    children: [
+      { type: "button", props: { "data-action": "inc" }, children: ["inc"] },
+      {
+        type: "button",
+        props: { "data-action": "other" },
+        children: ["other"],
+      },
+      { type: "p", props: {}, children: [`${count},${other}`] },
+    ],
+  };
+}
+
+describe("useEffect 실행 시점", () => {
+  it("F71 effect는 mount 안에서 첫 View를 DOM에 반영한 직후 동기로 불린다", () => {
+    const { log } = mountEffectRoot((_props, log, container) => {
+      useEffect(() => {
+        log.push(container.textContent ?? "");
+      });
+      return { type: "p", props: {}, children: ["first"] };
+    });
+
+    expect(log).toEqual(["first"]);
+  });
+
+  it("F72 deps 없는 effect는 클릭 뒤 새 화면을 본다", () => {
+    const { log, click } = mountEffectRoot(({ on }, log, container) => {
+      const [count, setCount] = useState(0);
+      useEffect(() => {
+        log.push(container.textContent ?? "");
+      });
+      on("inc", () => setCount(count + 1));
+      return {
+        type: "button",
+        props: { "data-action": "inc" },
+        children: [String(count)],
+      };
+    });
+
+    click("inc");
+
+    expect(log).toEqual(["0", "1"]);
+  });
+
+  it("F73 effect는 Root Component 본문이 끝난 뒤에 불린다", () => {
+    const { log } = mountEffectRoot((_props, log) => {
+      useEffect(() => {
+        log.push("effect");
+      });
+      log.push("render");
+      return "view";
+    });
+
+    expect(log).toEqual(["render", "effect"]);
+  });
+
+  it("F74 effect 두 개는 선언한 순서대로 불린다", () => {
+    const { log } = mountEffectRoot((_props, log) => {
+      useEffect(() => {
+        log.push("a");
+      });
+      useEffect(() => {
+        log.push("b");
+      });
+      return "view";
+    });
+
+    expect(log).toEqual(["a", "b"]);
+  });
+});
+
+describe("useEffect deps", () => {
+  it("F75 deps가 []이면 다섯 번 클릭해도 effect는 한 번만 불린다", () => {
+    const { log, click } = mountEffectRoot(({ on }, log) => {
+      const [count, setCount] = useState(0);
+      useEffect(() => {
+        log.push("effect");
+      }, []);
+      on("inc", () => setCount(count + 1));
+      return createActionButton("inc");
+    });
+
+    for (let clickCount = 0; clickCount < 5; clickCount++) {
+      click("inc");
+    }
+
+    expect(log).toEqual(["effect"]);
+  });
+
+  it("F76 deps를 생략하면 세 번 클릭했을 때 effect가 모두 네 번 불린다", () => {
+    const { log, click } = mountEffectRoot(({ on }, log) => {
+      const [count, setCount] = useState(0);
+      useEffect(() => {
+        log.push("effect");
+      });
+      on("inc", () => setCount(count + 1));
+      return createActionButton("inc");
+    });
+
+    click("inc");
+    click("inc");
+    click("inc");
+
+    expect(log).toHaveLength(4);
+  });
+
+  it("F77 deps의 값이 바뀌면 effect가 다시 불리고 새 값을 본다", () => {
+    const { log, click } = mountEffectRoot(({ on }, log) => {
+      const [count, setCount] = useState(0);
+      const [other, setOther] = useState(0);
+      useEffect(() => {
+        log.push(`effect ${count}`);
+      }, [count]);
+      return createTwoCounterView(on, count, setCount, other, setOther);
+    });
+
+    click("inc");
+
+    expect(log).toEqual(["effect 0", "effect 1"]);
+  });
+
+  it("F78 deps의 값이 같으면 렌더링은 늘어도 effect는 다시 불리지 않는다", () => {
+    const { log, renders, click } = mountEffectRoot(({ on }, log) => {
+      const [count, setCount] = useState(0);
+      const [other, setOther] = useState(0);
+      useEffect(() => {
+        log.push("effect");
+      }, [count]);
+      return createTwoCounterView(on, count, setCount, other, setOther);
+    });
+
+    click("other");
+
+    expect(renders.count).toBe(2);
+    expect(log).toEqual(["effect"]);
+  });
+
+  it("F79 deps의 값이 NaN으로 남으면 effect가 다시 불리지 않는다", () => {
+    const { log, click } = mountEffectRoot(({ on }, log) => {
+      const [count, setCount] = useState(0);
+      const [other, setOther] = useState(0);
+      useEffect(() => {
+        log.push("effect");
+      }, [Number.NaN]);
+      return createTwoCounterView(on, count, setCount, other, setOther);
+    });
+
+    click("other");
+
+    expect(log).toEqual(["effect"]);
+  });
+
+  it("F80 deps의 값이 0에서 -0으로 바뀌면 effect가 다시 불린다", () => {
+    const { log, click } = mountEffectRoot(({ on }, log) => {
+      const [zero, setZero] = useState(0);
+      useEffect(() => {
+        log.push("effect");
+      }, [zero]);
+      on("negative", () => setZero(-0));
+      return createActionButton("negative");
+    });
+
+    click("negative");
+
+    expect(log).toEqual(["effect", "effect"]);
+  });
+
+  it("F81 deps의 길이가 늘거나 줄면 앞 칸이 같아도 effect가 다시 불린다", () => {
+    const { log, click } = mountEffectRoot(({ on }, log) => {
+      const [step, setStep] = useState(0);
+      useEffect(
+        () => {
+          log.push("effect");
+        },
+        step % 2 === 0 ? ["a"] : ["a", "b"],
+      );
+      on("next", () => setStep(step + 1));
+      return createActionButton("next");
+    });
+
+    click("next");
+    click("next");
+
+    expect(log).toEqual(["effect", "effect", "effect"]);
+  });
+
+  it("F82 deps가 []와 생략 사이에서 바뀌면 바뀐 렌더링마다 effect가 다시 불린다", () => {
+    const { log, click } = mountEffectRoot(({ on }, log) => {
+      const [step, setStep] = useState(0);
+      useEffect(
+        () => {
+          log.push(`effect ${step}`);
+        },
+        step % 2 === 0 ? [] : undefined,
+      );
+      on("next", () => setStep(step + 1));
+      return createActionButton("next");
+    });
+
+    click("next");
+    click("next");
+
+    expect(log).toEqual(["effect 0", "effect 1", "effect 2"]);
+  });
+
+  it("F88 같은 값 setter로 렌더링이 없으면 deps 없는 effect도 불리지 않는다", () => {
+    const { log, click } = mountEffectRoot(({ on }, log) => {
+      const [count, setCount] = useState(0);
+      useEffect(() => {
+        log.push("effect");
+      });
+      on("same", () => setCount(count));
+      return createActionButton("same");
+    });
+
+    click("same");
+
+    expect(log).toEqual(["effect"]);
+  });
+});
+
+describe("useEffect 정리 함수", () => {
+  it("F83 deps가 바뀌면 이전 effect의 정리 함수가 이전 값으로 불린 뒤 effect가 불린다", () => {
+    const { log, click } = mountEffectRoot(({ on }, log) => {
+      const [count, setCount] = useState(0);
+      const [other, setOther] = useState(0);
+      useEffect(() => {
+        log.push(`effect ${count}`);
+        return () => log.push(`cleanup ${count}`);
+      }, [count]);
+      return createTwoCounterView(on, count, setCount, other, setOther);
+    });
+
+    click("inc");
+
+    expect(log).toEqual(["effect 0", "cleanup 0", "effect 1"]);
+  });
+
+  it("F84 deps가 같으면 정리 함수가 불리지 않는다", () => {
+    const { log, click } = mountEffectRoot(({ on }, log) => {
+      const [count, setCount] = useState(0);
+      const [other, setOther] = useState(0);
+      useEffect(() => {
+        log.push("effect");
+        return () => log.push("cleanup");
+      }, [count]);
+      return createTwoCounterView(on, count, setCount, other, setOther);
+    });
+
+    click("other");
+
+    expect(log).toEqual(["effect"]);
+  });
+
+  it("F85 deps가 []인 effect의 정리 함수는 여러 번 클릭해도 불리지 않는다", () => {
+    const { log, click } = mountEffectRoot(({ on }, log) => {
+      const [count, setCount] = useState(0);
+      useEffect(() => {
+        log.push("effect");
+        return () => log.push("cleanup");
+      }, []);
+      on("inc", () => setCount(count + 1));
+      return createActionButton("inc");
+    });
+
+    click("inc");
+    click("inc");
+    click("inc");
+
+    expect(log).toEqual(["effect"]);
+  });
+
+  it("F86 다시 불릴 effect 두 개는 정리 함수를 모두 먼저 부른 뒤 effect를 부른다", () => {
+    const { log, click } = mountEffectRoot(({ on }, log) => {
+      const [count, setCount] = useState(0);
+      useEffect(() => {
+        log.push("effect1");
+        return () => log.push("cleanup1");
+      }, [count]);
+      useEffect(() => {
+        log.push("effect2");
+        return () => log.push("cleanup2");
+      }, [count]);
+      on("inc", () => setCount(count + 1));
+      return createActionButton("inc");
+    });
+    log.length = 0;
+
+    click("inc");
+
+    expect(log).toEqual(["cleanup1", "cleanup2", "effect1", "effect2"]);
+  });
+
+  it("F87 effect가 함수가 아닌 값을 돌려주면 다시 불릴 때 Error 없이 effect만 불린다", () => {
+    const returnNumber = (() => 1) as unknown as () => undefined;
+    const { log, click } = mountEffectRoot(({ on }, log) => {
+      const [count, setCount] = useState(0);
+      useEffect(() => {
+        log.push("effect");
+        return returnNumber();
+      }, [count]);
+      on("inc", () => setCount(count + 1));
+      return createActionButton("inc");
+    });
+
+    click("inc");
+
+    expect(log).toEqual(["effect", "effect"]);
+  });
+});
+
+describe("useEffect 안의 setter와 오류", () => {
+  it("F89 []인 effect에서 setter를 부르면 mount가 끝났을 때 새 화면이고, 렌더링은 두 번, effect는 한 번이다", () => {
+    const { container, log, renders } = mountEffectRoot((_props, log) => {
+      const [ready, setReady] = useState(false);
+      useEffect(() => {
+        log.push("effect");
+        setReady(true);
+      }, []);
+      return { type: "p", props: {}, children: [ready ? "ready" : "wait"] };
+    });
+
+    expect(container.textContent).toBe("ready");
+    expect(renders.count).toBe(2);
+    expect(log).toEqual(["effect"]);
+  });
+
+  it("F90 [count]인 effect가 count가 3이 될 때까지 늘리면 mount가 끝났을 때 3이고 effect는 네 번 불린다", () => {
+    const { container, log } = mountEffectRoot((_props, log) => {
+      const [count, setCount] = useState(0);
+      useEffect(() => {
+        log.push(`effect ${count}`);
+        if (count < 3) {
+          setCount((currentCount) => currentCount + 1);
+        }
+      }, [count]);
+      return { type: "p", props: {}, children: [String(count)] };
+    });
+
+    expect(container.textContent).toBe("3");
+    expect(log).toHaveLength(4);
+  });
+
+  it("F91 []인 effect A가 setter를 부르고 deps 없는 effect B가 뒤에 있으면, 최종 화면은 새 값이고 B는 두 번 불린다", () => {
+    const { container, log } = mountEffectRoot((_props, log) => {
+      const [value, setValue] = useState("old");
+      useEffect(() => {
+        setValue("new");
+      }, []);
+      useEffect(() => {
+        log.push("b");
+      });
+      return { type: "p", props: {}, children: [value] };
+    });
+
+    expect(container.textContent).toBe("new");
+    expect(log).toEqual(["b", "b"]);
+  });
+
+  it.todo(
+    "F92 deps 없는 effect가 매번 새 값으로 setter를 부르면 끝없이 반복된다 (막지 않으며, 테스트하면 멈추지 않음)",
+  );
+
+  it("F93 effect가 Error를 던지면 mount에서 그 Error가 나가고 DOM은 이미 첫 View다", () => {
+    const container = createContainer();
+    const component = new FunctionComponent((): VNode => {
+      useEffect(() => {
+        throw new Error("effect failed");
+      });
+      return { type: "p", props: {}, children: ["first"] };
+    });
+
+    expect(() => component.mount(container)).toThrow("effect failed");
+    expect(container.textContent).toBe("first");
+  });
+});
+
+describe("useMemo", () => {
+  function mountMemoRoot(
+    computeFromCount: (count: number) => unknown,
+    createDeps: (count: number) => readonly unknown[] | undefined,
+  ): EffectRoot & { values: unknown[] } {
+    const values: unknown[] = [];
+    const root = mountEffectRoot(({ on }, log) => {
+      const [count, setCount] = useState(0);
+      const [other, setOther] = useState(0);
+      const value = useMemo(() => {
+        log.push("compute");
+        return computeFromCount(count);
+      }, createDeps(count));
+      values.push(value);
+      return createTwoCounterView(on, count, setCount, other, setOther);
+    });
+    return { ...root, values };
+  }
+
+  it("F94 첫 렌더링에서 계산 함수를 한 번 불러 그 값을 첫 View에 쓴다", () => {
+    const { log, values } = mountMemoRoot(
+      (count) => count * 2,
+      (count) => [count],
+    );
+
+    expect(values).toEqual([0]);
+    expect(log).toEqual(["compute"]);
+  });
+
+  it("F95 deps가 같으면 세 번 다시 그려도 계산 함수는 한 번이고 같은 객체를 돌려준다", () => {
+    const { log, values, click } = mountMemoRoot(
+      (count) => ({ double: count * 2 }),
+      (count) => [count],
+    );
+
+    click("other");
+    click("other");
+    click("other");
+
+    expect(log).toEqual(["compute"]);
+    expect(values).toHaveLength(4);
+    expect(values.every((value) => value === values[0])).toBe(true);
+  });
+
+  it("F96 deps가 바뀌면 계산 함수가 다시 불리고 새 값을 돌려준다", () => {
+    const { log, values, click } = mountMemoRoot(
+      (count) => count * 2,
+      (count) => [count],
+    );
+
+    click("inc");
+
+    expect(log).toEqual(["compute", "compute"]);
+    expect(values).toEqual([0, 2]);
+  });
+
+  it("F97 deps의 값이 NaN으로 남으면 계산 함수가 다시 불리지 않는다", () => {
+    const { log, click } = mountMemoRoot(
+      () => "value",
+      () => [Number.NaN],
+    );
+
+    click("other");
+
+    expect(log).toEqual(["compute"]);
+  });
+
+  it("F98 deps가 []이면 여러 번 클릭해도 계산 함수는 한 번만 불린다", () => {
+    const { log, click } = mountMemoRoot(
+      () => "value",
+      () => [],
+    );
+
+    click("inc");
+    click("other");
+    click("inc");
+
+    expect(log).toEqual(["compute"]);
+  });
+
+  it("F99 deps를 생략하면 세 번 클릭했을 때 계산 함수가 모두 네 번 불린다", () => {
+    const { log, click } = mountMemoRoot(
+      () => "value",
+      () => undefined,
+    );
+
+    click("other");
+    click("other");
+    click("other");
+
+    expect(log).toHaveLength(4);
+  });
+
+  it("F100 계산 결과가 undefined여도 deps가 같으면 다시 계산하지 않는다", () => {
+    const { log, values, click } = mountMemoRoot(
+      () => undefined,
+      () => [],
+    );
+
+    click("other");
+
+    expect(log).toEqual(["compute"]);
+    expect(values).toEqual([undefined, undefined]);
+  });
+});
+
+describe("Hook 섞어 부르기", () => {
+  function mountMixedRoot(): EffectRoot {
+    return mountEffectRoot(({ on }, log) => {
+      const [first, setFirst] = useState(1);
+      const memo = useMemo(() => {
+        log.push("compute");
+        return first * 10;
+      }, [first]);
+      useEffect(() => {
+        log.push("effect");
+      }, [first]);
+      const [last, setLast] = useState("a");
+      on("first", () => setFirst(first + 1));
+      on("last", () => setLast(`${last}a`));
+      return {
+        type: "div",
+        props: {},
+        children: [
+          createActionButton("first"),
+          createActionButton("last"),
+          { type: "p", props: {}, children: [`${first},${memo},${last}`] },
+        ],
+      };
+    });
+  }
+  const readText = (container: Element) =>
+    container.querySelector("p")?.textContent;
+
+  it("F101 useState, useMemo, useEffect, useState 순서에서 마지막 칸만 바꾸면 memo와 effect는 그대로다", () => {
+    const { container, log, click } = mountMixedRoot();
+
+    click("last");
+
+    expect(readText(container)).toBe("1,10,aa");
+    expect(log).toEqual(["compute", "effect"]);
+  });
+
+  it("F102 같은 순서에서 첫 칸을 바꾸면 memo가 다시 계산되고 effect가 다시 불리며 마지막 칸은 그대로다", () => {
+    const { container, log, click } = mountMixedRoot();
+
+    click("first");
+
+    expect(readText(container)).toBe("2,20,a");
+    expect(log).toEqual(["compute", "effect", "compute", "effect"]);
+  });
+
+  it("F103 useMemo의 결과를 useEffect의 deps에 넣으면 memo가 같은 값일 때 effect도 다시 불리지 않는다", () => {
+    const { log, click } = mountEffectRoot(({ on }, log) => {
+      const [count, setCount] = useState(0);
+      const [other, setOther] = useState(0);
+      const parity = useMemo(() => count % 2, [count]);
+      useEffect(() => {
+        log.push(`effect ${parity}`);
+      }, [parity]);
+      return createTwoCounterView(on, count, setCount, other, setOther);
+    });
+
+    click("other");
+    click("inc");
+
+    expect(log).toEqual(["effect 0", "effect 1"]);
   });
 });
