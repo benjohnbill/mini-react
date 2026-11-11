@@ -61,25 +61,9 @@ Agents: if a path named here does not exist, report it to the owner.
 
 `View`는 화면 전체를 설명하는 값이고, LMS가 Virtual DOM이라 부르는 것입니다. 두 Phase는 `View`에서 만납니다. L20 "Phase 2 의 상태가 변경되어 다시 렌더링할 때, Phase 1 에서 만든 Virtual DOM 을 그대로 활용합니다."는 코드에서 `update()`가 `diffViews`와 `applyPatchesToDom`을 그대로 부르는 두 줄입니다.
 
-```mermaid
-flowchart LR
-    subgraph phase2["Phase 2 · 새 View를 만듭니다"]
-        direction LR
-        sClick["click<br/>on · data-action"] --> sSetter["setter<br/>useState의 setter"]
-        sSetter --> sInstance["instance<br/>update()"]
-        sInstance --> sRender["render<br/>Root Component · Hook"]
-    end
-    subgraph phase1["Phase 1 · 두 View의 차이만 DOM에 반영합니다"]
-        direction LR
-        sVnode["vnode<br/>createVNodeFromDom"] -->|"새 View"| sDiff["diff<br/>diffViews"]
-        sDiff -->|"Patch 목록"| sPatch["patch<br/>applyPatchesToDom"]
-        sPatch -.->|"검증 페이지"| sHistory["history<br/>StateHistory"]
-    end
-    testArea["테스트 영역 HTML"] --> sVnode
-    sRender -->|"새 View"| sDiff
-    sPatch --> dom["container (DOM)"]
-    sPatch -->|"DOM 반영 뒤 (Phase 2)"| sEffect["effect<br/>useEffect"]
-```
+![Phase 2의 click, setter, instance, render가 만든 새 View와 Phase 1의 vnode가 만든 새 View가 diff로 모이고, patch가 DOM에 반영한 뒤 effect가 실행되는 그림](docs/images/architecture.png)
+
+상자의 `ADR` 숫자는 그 단계의 결정 수입니다. 그림의 원본은 `docs/images/architecture.html`입니다.
 
 ### 단계
 

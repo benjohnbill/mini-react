@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>mini-react Architecture</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Noto+Sans+KR:wght@400;500;600&family=Noto+Serif+KR:wght@400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Geist', 'Noto Sans KR', system-ui, sans-serif;
+      background: #f5f5f5;
+      color: #2d3142;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2rem;
+      word-break: keep-all;
+      overflow-wrap: break-word;
+    }
+    .frame { max-width: 1200px; width: 100%; }
+    .diagram-container { width: 100%; overflow-x: auto; }
+    .eyebrow { font-family: 'Geist Mono', monospace; font-size: 0.66rem; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: #4f5d75; margin-bottom: 0.5rem; }
+    h1 { font-family: 'Instrument Serif', 'Noto Serif KR', serif; font-size: 2rem; font-weight: 400; letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 1.5rem; }
+    svg { width: 100%; min-width: 800px; display: block; }
+    @media print {
+      .diagram-container { overflow-x: visible; }
+      svg { min-width: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Architecture · mini-react</p>
+    <h1>Phase와 단계</h1>
+    <div class="diagram-container">
+      <svg viewBox="0 0 800 552" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="architecture-title architecture-desc">
+        <title id="architecture-title">mini-react의 Phase와 단계</title>
+        <desc id="architecture-desc">Phase 2의 click, setter, instance, render가 만든 새 View와 Phase 1의 vnode가 만든 새 View가 diff로 모이고, patch가 DOM에 반영한 뒤 Phase 2의 effect가 실행되는 흐름.</desc>
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+          <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#bf4520"/></marker>
+        </defs>
+
+        <rect width="100%" height="100%" fill="#f5f5f5"/>
+
+        <!-- Zones -->
+        <rect x="24" y="20" width="752" height="120" rx="8" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.16)" stroke-width="0.8"/>
+        <text x="40" y="38" fill="#5a6580" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="start">PHASE 2 · State가 바뀌면 새 View 생성</text>
+        <rect x="24" y="216" width="752" height="120" rx="8" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.16)" stroke-width="0.8"/>
+        <text x="40" y="234" fill="#5a6580" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="start">PHASE 1 · 두 View의 차이만 DOM에 반영</text>
+        <rect x="404" y="372" width="188" height="112" rx="8" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.16)" stroke-width="0.8"/>
+        <rect x="412" y="378" width="48" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="436" y="387" fill="#5a6580" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">PHASE 2</text>
+
+        <!-- Arrows first (behind boxes) -->
+        <line x1="172" y1="88" x2="236" y2="88" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <line x1="368" y1="88" x2="432" y2="88" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <line x1="564" y1="88" x2="628" y2="88" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <path d="M 694,120 V 172 Q 694,180 686,180 H 310 Q 302,180 302,188 V 252" fill="none" stroke="#bf4520" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+        <line x1="172" y1="284" x2="236" y2="284" stroke="#bf4520" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+        <line x1="368" y1="284" x2="432" y2="284" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <line x1="564" y1="284" x2="628" y2="284" stroke="#4f5d75" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+        <line x1="498" y1="316" x2="498" y2="404" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+        <!-- Arrow labels -->
+        <rect x="470" y="156" width="56" height="16" rx="2" fill="#f5f5f5"/>
+        <text x="498" y="168" fill="#bf4520" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="middle">새 View</text>
+        <rect x="176" y="260" width="56" height="16" rx="2" fill="#f5f5f5"/>
+        <text x="204" y="272" fill="#bf4520" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="middle">새 View</text>
+        <rect x="376" y="264" width="48" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="400" y="273" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">PATCH[]</text>
+        <rect x="580" y="264" width="32" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="596" y="273" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">PUSH</text>
+        <rect x="508" y="346" width="80" height="16" rx="2" fill="#f5f5f5"/>
+        <text x="548" y="358" fill="#4f5d75" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="middle">DOM 반영 뒤</text>
+
+        <!-- Nodes -->
+        <!-- Node: click -->
+        <rect x="40" y="56" width="132" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="40" y="56" width="132" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <rect x="48" y="64" width="40" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+        <text x="68" y="73" fill="#5a6580" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">ADR 5</text>
+        <text x="106" y="94" fill="#2d3142" font-size="14" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">click</text>
+        <text x="106" y="110" fill="#4f5d75" font-size="10" font-family="'Geist Mono', monospace" text-anchor="middle">on · data-action</text>
+        <!-- Node: setter -->
+        <rect x="236" y="56" width="132" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="236" y="56" width="132" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <rect x="244" y="64" width="40" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+        <text x="264" y="73" fill="#5a6580" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">ADR 8</text>
+        <text x="302" y="94" fill="#2d3142" font-size="14" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">setter</text>
+        <text x="302" y="110" fill="#4f5d75" font-size="10" font-family="'Geist Mono', monospace" text-anchor="middle">useState setter</text>
+        <!-- Node: instance -->
+        <rect x="432" y="56" width="132" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="432" y="56" width="132" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <rect x="440" y="64" width="40" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+        <text x="460" y="73" fill="#5a6580" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">ADR 6</text>
+        <text x="498" y="94" fill="#2d3142" font-size="14" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">instance</text>
+        <text x="498" y="110" fill="#4f5d75" font-size="10" font-family="'Geist Mono', monospace" text-anchor="middle">update()</text>
+        <!-- Node: render -->
+        <rect x="628" y="56" width="132" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="628" y="56" width="132" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <rect x="636" y="64" width="40" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+        <text x="656" y="73" fill="#5a6580" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">ADR 9</text>
+        <text x="694" y="94" fill="#2d3142" font-size="14" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">render</text>
+        <text x="694" y="110" fill="#4f5d75" font-size="10" font-family="'Geist Mono', monospace" text-anchor="middle">Root Component</text>
+        <!-- Node: vnode -->
+        <rect x="40" y="252" width="132" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="40" y="252" width="132" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <rect x="48" y="260" width="40" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+        <text x="68" y="269" fill="#5a6580" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">ADR 14</text>
+        <text x="106" y="290" fill="#2d3142" font-size="14" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">vnode</text>
+        <text x="106" y="306" fill="#4f5d75" font-size="10" font-family="'Geist Mono', monospace" text-anchor="middle">createVNodeFromDom</text>
+        <!-- Node: diff -->
+        <rect x="236" y="252" width="132" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="236" y="252" width="132" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <rect x="244" y="260" width="40" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+        <text x="264" y="269" fill="#5a6580" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">ADR 8</text>
+        <text x="302" y="290" fill="#2d3142" font-size="14" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">diff</text>
+        <text x="302" y="306" fill="#4f5d75" font-size="10" font-family="'Geist Mono', monospace" text-anchor="middle">diffViews</text>
+        <!-- Node: patch -->
+        <rect x="432" y="252" width="132" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="432" y="252" width="132" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <rect x="440" y="260" width="40" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+        <text x="460" y="269" fill="#5a6580" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">ADR 9</text>
+        <text x="498" y="290" fill="#2d3142" font-size="14" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">patch</text>
+        <text x="498" y="306" fill="#4f5d75" font-size="10" font-family="'Geist Mono', monospace" text-anchor="middle">applyPatchesToDom</text>
+        <!-- Node: history -->
+        <rect x="628" y="252" width="132" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="628" y="252" width="132" height="64" rx="6" fill="#ffffff" stroke="#4f5d75" stroke-width="1" stroke-dasharray="4,3"/>
+        <rect x="636" y="260" width="40" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+        <text x="656" y="269" fill="#5a6580" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">ADR 5</text>
+        <text x="694" y="290" fill="#2d3142" font-size="14" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">history</text>
+        <text x="694" y="306" fill="#4f5d75" font-size="10" font-family="'Geist Mono', monospace" text-anchor="middle">StateHistory</text>
+        <!-- Node: effect -->
+        <rect x="432" y="404" width="132" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="432" y="404" width="132" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <rect x="440" y="412" width="40" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+        <text x="460" y="421" fill="#5a6580" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">ADR 8</text>
+        <text x="498" y="442" fill="#2d3142" font-size="14" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">effect</text>
+        <text x="498" y="458" fill="#4f5d75" font-size="10" font-family="'Geist Mono', monospace" text-anchor="middle">useEffect</text>
+
+        <!-- Callout -->
+        <text x="40" y="412" fill="#2d3142" font-size="22" font-style="italic" font-family="'Instrument Serif', 'Noto Serif KR', serif">두 Phase는 View에서 만납니다</text>
+        <text x="40" y="438" fill="#4f5d75" font-size="12" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif">update()가 diffViews와 applyPatchesToDom을</text>
+        <text x="40" y="456" fill="#4f5d75" font-size="12" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif">그대로 부릅니다 · LMS L20</text>
+
+        <!-- Legend strip -->
+        <line x1="24" y1="504" x2="776" y2="504" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+        <line x1="24" y1="528" x2="52" y2="528" stroke="#bf4520" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+        <text x="60" y="532" fill="#4f5d75" font-size="12" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif">새 View가 들어오는 길</text>
+        <line x1="232" y1="528" x2="260" y2="528" stroke="#4f5d75" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+        <text x="268" y="532" fill="#4f5d75" font-size="12" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif">검증 페이지에서만</text>
+        <rect x="408" y="522" width="40" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+        <text x="428" y="531" fill="#5a6580" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">ADR 9</text>
+        <text x="456" y="532" fill="#4f5d75" font-size="12" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif">그 단계의 결정(ADR) 수</text>
+      </svg>
+    </div>
+  </div>
+</body>
+</html>
