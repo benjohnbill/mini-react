@@ -493,26 +493,32 @@ describe("I-HR History와 화면 복원", () => {
 
   // 저장한 View를 테스트 영역의 HTML로 바꿨다가 다시 읽으면 주석은 사라지고 붙은 글자는 하나로 합쳐집니다.
   describe("HR-N07 HTML로 오가도 모양이 같은 View를 저장합니다", () => {
-    for (const between of [
-      "<!--x-->",
-      "<script>1</script>",
-      "<iframe></iframe>",
-    ]) {
-      it(`HR-N07 글자 사이의 ${between}를 지운 View로 돌아가 그대로 Patch하면 이력이 늘지 않습니다`, () => {
-        const page = createPageFromIndexHtml();
-        applyHtmlWithPatchButton(page, "<p>x</p>");
-        applyHtmlWithPatchButton(page, `<p>a${between}b</p>`);
-        applyHtmlWithPatchButton(page, "<p>z</p>");
-        page.backButton.click();
+    function expectNoNewHistoryAfterRemoving(between: string): void {
+      const page = createPageFromIndexHtml();
+      applyHtmlWithPatchButton(page, "<p>x</p>");
+      applyHtmlWithPatchButton(page, `<p>a${between}b</p>`);
+      applyHtmlWithPatchButton(page, "<p>z</p>");
+      page.backButton.click();
 
-        expect(page.real.innerHTML).toBe("<p>ab</p>");
-        expectPageToShowView(page, { type: "p", props: {}, children: ["ab"] });
-        expect(createDisabledStatesFromButtons(page)).toEqual({
-          backDisabled: false,
-          forwardDisabled: false,
-        });
+      expect(page.real.innerHTML).toBe("<p>ab</p>");
+      expectPageToShowView(page, { type: "p", props: {}, children: ["ab"] });
+      expect(createDisabledStatesFromButtons(page)).toEqual({
+        backDisabled: false,
+        forwardDisabled: false,
       });
     }
+
+    it("HR-N07a 글자 사이의 주석을 지운 View로 돌아가 그대로 Patch하면 이력이 늘지 않습니다", () => {
+      expectNoNewHistoryAfterRemoving("<!--x-->");
+    });
+
+    it("HR-N07b 글자 사이의 script를 지운 View로 돌아가 그대로 Patch하면 이력이 늘지 않습니다", () => {
+      expectNoNewHistoryAfterRemoving("<script>1</script>");
+    });
+
+    it("HR-N07c 글자 사이의 iframe을 지운 View로 돌아가 그대로 Patch하면 이력이 늘지 않습니다", () => {
+      expectNoNewHistoryAfterRemoving("<iframe></iframe>");
+    });
 
     it("HR-N08 처음 실제 영역의 주석도 지우고 글자를 합친 뒤 처음 View로 저장합니다", () => {
       applyIndexHtmlToBody();

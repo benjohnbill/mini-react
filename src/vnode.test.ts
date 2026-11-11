@@ -1,4 +1,4 @@
-// M1 공통 테스트입니다. 동작의 근거는 ADR 0005입니다. 왕복 테스트는 round-trip.test.ts에 있습니다.
+// M1 공통 테스트입니다. 동작의 근거는 vnode-children-match-dom-children-by-number 같은 변환 ADR이고, 테스트 ID로 이어집니다. 왕복 테스트는 round-trip.test.ts에 있습니다.
 import { describe, expect, it } from "vitest";
 import {
   createDomFromVNode,

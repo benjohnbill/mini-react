@@ -1,4 +1,4 @@
-// M4 공통 테스트입니다. 동작의 근거는 ADR 0007입니다.
+// M4 공통 테스트입니다. 동작의 근거는 이름이 history-로 시작하는 ADR이고, 테스트 ID로 이어집니다.
 import { describe, expect, it } from "vitest";
 import { StateHistory } from "./history";
 import type { VNode } from "./vnode";
@@ -253,8 +253,25 @@ describe("StateHistory", () => {
       expect(history.forward()).toStrictEqual(createView("B"));
     });
   });
+});
 
-  describe("선택: 용량 제한", () => {
-    it.todo("H18 선택 사항: 용량 제한은 구현하지 않음 (Lark 69행 선택)");
+describe("StateHistory 함수 속성", () => {
+  it("F138 함수 속성이 든 View를 저장하면 structuredClone이 DataCloneError를 던진다", () => {
+    const history = new StateHistory();
+    const view = {
+      type: "button",
+      props: { onclick: () => {} } as unknown as Record<string, string>,
+      children: [],
+    };
+
+    let caught: unknown;
+    try {
+      history.push(view);
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toBeInstanceOf(Error);
+    expect((caught as Error).name).toBe("DataCloneError");
   });
 });
