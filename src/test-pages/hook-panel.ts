@@ -187,15 +187,9 @@ function createPanelView({
       },
       { type: "h3", props: {}, children: ["hooks"] },
       {
-        type: "table",
+        type: "ul",
         props: { class: "cells" },
-        children: [
-          {
-            type: "tbody",
-            props: {},
-            children: rows.map((row, index) => createCellRow(row, index)),
-          },
-        ],
+        children: rows.map((row, index) => createCellRow(row, index)),
       },
       {
         type: "h3",
@@ -243,20 +237,29 @@ function createMessage(ranStages: readonly Stage[]): string {
 }
 
 function createCellRow(row: CellRow, index: number): VNode {
+  // 윗줄은 칸 번호, Hook 이름, 이번 클릭의 결과이고, 아랫줄은 칸의 값입니다.
   return {
-    type: "tr",
+    type: "li",
     props: {
       "data-cell": String(index),
       "data-result": row.result ?? "",
     },
     children: [
-      { type: "th", props: {}, children: [`hooks[${index}]`] },
-      { type: "td", props: {}, children: [row.label] },
-      { type: "td", props: { class: "cell-value" }, children: [row.valueText] },
       {
-        type: "td",
+        type: "span",
+        props: { class: "cell-index" },
+        children: [`hooks[${index}]`],
+      },
+      { type: "span", props: { class: "cell-label" }, children: [row.label] },
+      {
+        type: "span",
         props: { class: "cell-result" },
         children: [row.result === undefined ? "" : resultTexts[row.result]],
+      },
+      {
+        type: "span",
+        props: { class: "cell-value" },
+        children: [row.valueText],
       },
     ],
   };
