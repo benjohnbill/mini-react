@@ -1,5 +1,5 @@
 // 테스트는 #30의 seam A로 확인합니다. 입구는 mount와 data-action 요소의 click이고, 출구는 컨테이너 DOM과 함수가 불린 횟수입니다.
-// 예외: Hook 호출 위치(F15, F43~F45), mount 전 update()(F7), 첫 렌더링에서 잡아 둔 오래된 setter(F26, F38, F40), 렌더링 밖의 on(F64), Error 뒤의 update()와 잡아 둔 setter(F117, F118, F119~F121, F125~F127, F129, F130, F140)는 그 호출 자체가 대상이므로 useState, setter, update()를 직접 부릅니다.
+// 예외: Hook 호출 위치(F15, F43~F45), mount 전 update()(F7), 첫 렌더링에서 잡아 둔 오래된 setter(F26, F38, F40), 다른 Root Instance에서 부르는 setter(F14a), 렌더링 밖의 on(F64), Error 뒤의 update()와 잡아 둔 setter(F117, F118, F119~F121, F125~F127, F129, F130, F140, F142)는 그 호출 자체가 대상이므로 useState, setter, update()를 직접 부릅니다.
 // 테스트 ID FN의 N은 #30 표의 행 번호입니다. 같은 행의 두 번째 테스트는 F104a처럼 소문자를 붙입니다.
 import { describe, expect, it } from "vitest";
 import {
@@ -265,6 +265,59 @@ describe("FunctionComponent update", () => {
     clickButton(second);
     expect(readButtonText(first)).toBe("1");
     expect(readButtonText(second)).toBe("1");
+  });
+
+  it("F14a 한 Root Instance의 setter를 다른 Root Instance의 클릭 함수에서 불러도, setter를 만든 쪽 화면만 다시 그려진다", () => {
+    const first = createContainer();
+    const second = createContainer();
+    let setFirstCount: StateSetter<number> | undefined;
+    new FunctionComponent(({ on }) => {
+      const [count, setCount] = useState(0);
+      setFirstCount = setCount;
+      return createIncrementButton(on, count, setCount);
+    }).mount(first);
+    let secondRenderCount = 0;
+    new FunctionComponent(({ on }) => {
+      secondRenderCount++;
+      on("inc", () => setFirstCount?.((count) => count + 1));
+      return {
+        type: "button",
+        props: { "data-action": "inc" },
+        children: ["+"],
+      };
+    }).mount(second);
+
+    clickButton(second);
+
+    expect(readButtonText(first)).toBe("1");
+    expect(readButtonText(second)).toBe("+");
+    expect(secondRenderCount).toBe(1);
+  });
+
+  it("F144 Root Component 본문이 DOM을 직접 고치면, 다음 update()의 Patch는 그 변경을 모르고 바뀐 곳만 고쳐 화면이 View와 어긋난다", () => {
+    const container = createContainer();
+    new FunctionComponent(({ on }) => {
+      const [count, setCount] = useState(0);
+      if (count === 1) {
+        const title = container.querySelector("h1");
+        if (title !== null) {
+          title.textContent = "edited";
+        }
+      }
+      return {
+        type: "div",
+        props: {},
+        children: [
+          { type: "h1", props: {}, children: ["title"] },
+          createIncrementButton(on, count, setCount),
+        ],
+      };
+    }).mount(container);
+
+    clickButton(container);
+
+    expect(readButtonText(container)).toBe("1");
+    expect(container.querySelector("h1")?.textContent).toBe("edited");
   });
 
   it("F15 Root Component가 렌더링 중 Error를 던지면 Error가 나가고 화면은 직전 View로 남으며, 그 뒤 렌더링 밖 Hook 호출도 Error다", () => {
@@ -608,6 +661,7 @@ describe("useState setter", () => {
     const container = createContainer();
     new FunctionComponent(({ on }) => {
       const [show, setShow] = useState(true);
+      // biome-ignore lint/correctness/useHookAtTopLevel: 조건부 Hook이 칸을 밀어내는 CAUTION을 보여 주는 테스트입니다
       const first = show ? useState("first")[0] : "skipped";
       const [second] = useState("second");
       on("hide", () => setShow(false));
@@ -902,6 +956,7 @@ describe("Hook 호출 위치", () => {
       renderCount++;
       on("inc", () => {
         try {
+          // biome-ignore lint/correctness/useHookAtTopLevel: 렌더링 밖 Hook 호출이 Error인지 확인하는 테스트입니다
           useState(0);
         } catch (error) {
           errorFromClick = error;
@@ -1298,6 +1353,7 @@ describe("상태 없는 자식 Component", () => {
   it("F70 한계 — 자식 Component의 useState는 Error 없이 Root Instance의 칸을 써서, 자식을 빼면 Root Component가 자식의 값을 받는다", () => {
     const container = createContainer();
     const createChildWithState = (): VNode => {
+      // biome-ignore lint/correctness/useHookAtTopLevel: 자식 Component 안의 Hook이 막히지 않는 한계를 보여 주는 테스트입니다
       const [childValue] = useState("child");
       return { type: "span", props: {}, children: [childValue] };
     };
@@ -2481,7 +2537,7 @@ describe("Error 뒤의 인스턴스 상태", () => {
     expect(log).toEqual(["a"]);
   });
 
-  it("F142 첫 mount()가 render Error로 끝나면 컨테이너는 그대로이고, 같은 인스턴스의 mount()와 update()는 모두 Error다", () => {
+  it("F142 첫 mount()가 render Error로 끝나면 컨테이너는 그대로이고, 같은 인스턴스로 다시 mount()하면 그려지고 update()도 된다", () => {
     const container = createContainer("<i>old</i>");
     const control = { fail: true };
     const component = new FunctionComponent((): VNode => {
@@ -2491,12 +2547,53 @@ describe("Error 뒤의 인스턴스 상태", () => {
       return "view";
     });
     expect(() => component.mount(container)).toThrow("render failed");
+    expect(container.innerHTML).toBe("<i>old</i>");
+    expect(() => component.update()).toThrow("update() needs mount() first");
     control.fail = false;
 
-    expect(() => component.mount(container)).toThrow(
-      "mount() can be called only once",
+    component.mount(container);
+
+    expect(container.innerHTML).toBe("view");
+    expect(() => component.update()).not.toThrow();
+  });
+
+  it("F143 Root Component 본문에서 다른 Root Instance를 mount()하면 그 렌더링이 currentComponent를 비워, 본문의 뒤쪽 Hook 호출은 Error다", () => {
+    const outer = createContainer();
+    const inner = createContainer();
+    const component = new FunctionComponent((): VNode => {
+      useState(0);
+      new FunctionComponent((): VNode => "inner").mount(inner);
+      useState(1);
+      return "outer";
+    });
+
+    expect(() => component.mount(outer)).toThrow(
+      "Hooks can only be called while Root Component renders",
     );
-    expect(() => component.update()).toThrow("update() needs mount() first");
-    expect(container.innerHTML).toBe("<i>old</i>");
+    expect(inner.textContent).toBe("inner");
+    expect(outer.textContent).toBe("");
+  });
+
+  it("F142a 실패한 첫 mount()는 칸도 비우므로, 다시 mount()하면 초깃값 함수를 한 번 더 불러 새 값으로 그린다", () => {
+    const container = createContainer();
+    const saved: { text: string | undefined } = { text: undefined };
+    let initialValueCount = 0;
+    const component = new FunctionComponent((): VNode => {
+      const [text] = useState(() => {
+        initialValueCount++;
+        return saved.text;
+      });
+      if (text === undefined) {
+        throw new Error("render failed");
+      }
+      return text;
+    });
+    expect(() => component.mount(container)).toThrow("render failed");
+    saved.text = "loaded";
+
+    component.mount(container);
+
+    expect(container.textContent).toBe("loaded");
+    expect(initialValueCount).toBe(2);
   });
 });

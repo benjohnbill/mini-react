@@ -21,6 +21,9 @@
       "suspicious": {
         "noImportCycles": "error"
       },
+      "correctness": {
+        "useHookAtTopLevel": "error"
+      },
       "style": {
         "useNamingConvention": {
           "level": "error",
