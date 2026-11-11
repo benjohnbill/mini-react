@@ -15,7 +15,10 @@ const CITATION_LOOSE = /[(（]\s*테스트\s*[:：]([^)）]*)[)）]/g;
 const CITATION_STRICT = /^\(테스트: [^)]*\)$/;
 const INLINE_CODE = /`[^`\n]*`/g;
 const SUPERSEDED_STATUS = /^status:\s*superseded/m;
-const REQUIREMENT_ROW = /^\| [A-Z]+\d+ \|/;
+const REQUIREMENT_ROW = /^\| [A-Z]+\d+[a-z]? \|/;
+// 요구사항 표의 칸: ID | LMS 문장 | 충족 | 근거 | 남은 일
+const REQUIREMENT_ID_COLUMN = 1;
+const REQUIREMENT_ADR_COLUMNS = [4, 5];
 const ADR_NAME = /\b[a-z][a-z0-9]*(?:-[a-z0-9]+){2,}\b/g;
 
 function createFileListFromDir(dir, suffix) {
@@ -70,17 +73,21 @@ function createCitationsFromAdrFile(file) {
   });
 }
 
-// 요구사항 표의 근거 칸(넷째 칸)에 적은 ADR 이름 중 파일이 없는 것을 찾습니다.
-function createMissingAdrNamesFromRequirements(adrNames) {
+// 요구사항 표의 근거 칸과 남은 일 칸에 적은 ADR 이름 중 파일이 없는 것을 찾습니다.
+// 하이픈 조각이 셋 이상인 이름만 ADR 이름으로 봅니다(`data-action` 같은 두 조각 낱말을 거르기 위해서입니다).
+function findMissingAdrNamesInRequirements(adrNames) {
   return createFileListFromDir(REQUIREMENTS_DIR, ".md").flatMap((file) =>
     readFileSync(file, "utf8")
       .split("\n")
       .filter((line) => REQUIREMENT_ROW.test(line))
       .flatMap((line) => {
-        const basis = (line.split("|")[4] ?? "").replace(INLINE_CODE, "");
-        return (basis.match(ADR_NAME) ?? [])
+        const cells = line.split("|");
+        const id = cells[REQUIREMENT_ID_COLUMN].trim();
+        return REQUIREMENT_ADR_COLUMNS.flatMap(
+          (column) => cells[column]?.match(ADR_NAME) ?? [],
+        )
           .filter((name) => !adrNames.has(name))
-          .map((name) => ({ name, file }));
+          .map((name) => ({ name, file, id }));
       }),
   );
 }
@@ -100,7 +107,7 @@ const citations = createFileListFromDir(ADR_DIR, ".md").flatMap(
 const adrNames = new Set(
   createFileListFromDir(ADR_DIR, ".md").map((file) => basename(file, ".md")),
 );
-const missingAdrNames = createMissingAdrNamesFromRequirements(adrNames);
+const missingAdrNames = findMissingAdrNamesInRequirements(adrNames);
 
 const duplicatedIds = [
   ...new Set(
@@ -149,8 +156,8 @@ for (const { id, file } of malformedCitations) {
 for (const { id, file } of missingCitations) {
   console.log(`[실패] ${file}: 테스트에 없는 ID를 인용했습니다: ${id}`);
 }
-for (const { name, file } of missingAdrNames) {
-  console.log(`[실패] ${file}: 없는 ADR을 근거로 적었습니다: ${name}`);
+for (const { name, file, id } of missingAdrNames) {
+  console.log(`[실패] ${file} ${id}: 없는 ADR을 적었습니다: ${name}`);
 }
 for (const { id, file } of todoCitations) {
   console.log(`[확인] ${file}: 아직 it.todo인 테스트를 인용했습니다: ${id}`);
