@@ -48,8 +48,15 @@ export class FunctionComponent {
     if (this.container !== undefined) {
       throw new Error("mount() can be called only once");
     }
+    // 렌더링을 먼저 하고, 실패하면 칸도 비워 첫 mount가 흔적을 남기지 않게 합니다.
+    // 그래야 같은 인스턴스로 mount()를 다시 부를 수 있고, update()의 Error 메시지도 맞습니다.
+    try {
+      this.currentView = this.renderedView();
+    } catch (error) {
+      this.hooks = [];
+      throw error;
+    }
     this.container = container;
-    this.currentView = this.renderedView();
     container.replaceChildren(createDomFromVNode(this.currentView));
     container.addEventListener("click", (event) => {
       const actionName = findActionName(container, event);

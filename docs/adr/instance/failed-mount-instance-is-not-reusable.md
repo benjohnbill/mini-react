@@ -1,5 +1,5 @@
 ---
-status: proposed
+status: superseded by failed-mount-leaves-instance-reusable
 ---
 
 # 첫 `mount()`가 렌더링 중 `Error`로 끝나면 컨테이너는 그대로이고, 그 Root Instance의 `mount()`와 `update()`는 모두 `Error`라서 새 Root Instance를 만들어야 합니다
