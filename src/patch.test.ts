@@ -1,4 +1,4 @@
-// M3 공통 테스트입니다. 동작의 근거는 ADR 0005와 ADR 0006입니다.
+// M3 공통 테스트입니다. 동작의 근거는 ADR vnode-children-match-dom-children-by-number와 ADR 0006입니다.
 import { describe, expect, it } from "vitest";
 import { applyPatchesToDom, type Patch } from "./patch";
 

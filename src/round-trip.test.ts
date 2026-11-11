@@ -1,4 +1,4 @@
-// M1 왕복 통합 테스트입니다. 동작의 근거는 ADR 0005입니다.
+// M1 왕복 통합 테스트입니다. 동작의 근거는 ADR input-round-trip-is-compared-by-dot-value입니다.
 // 두 함수가 같은 잘못된 규칙을 쓰면 왕복은 통과하므로, 각 규칙은 vnode.test.ts의 단위 테스트가 직접 확인합니다.
 import { describe, expect, it } from "vitest";
 import { createDomFromVNode, createVNodeFromDom, type VNode } from "./vnode";
@@ -39,7 +39,7 @@ function getInput(node: Node): HTMLInputElement {
   return node;
 }
 
-// ADR 0005의 정규형입니다: 입력칸에는 value가 있고, 글자 노드 하나는 문자열 하나이며, 주석이 없습니다.
+// ADR input-value-prop-is-dot-value와 comments-are-dropped-from-vnode-only의 정규형입니다: 입력칸에는 value가 있고, 글자 노드 하나는 문자열 하나이며, 주석이 없습니다.
 function createSampleView(): VNode {
   return {
     type: "section",
