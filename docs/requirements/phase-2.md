@@ -20,7 +20,7 @@ status: 2026-11-11 기준
 |---|---|---|---|---|
 | L1 | 기존 React 의 핵심 기능인 Component · State · Hooks 를 직접 구현하고 이를 활용하여 동작하는 웹 페이지를 만들어 보는 것입니다. | 충족 | root-only-function-component, demo-page-is-one-counter, zero-runtime-dependencies | — |
 | L2 | Component 는 UI 를 나누는 작은 단위입니다. | 충족 | root-only-function-component (자식 Component를 props를 받아 `VNode`를 돌려주는 함수로 정함, F67~F69가 UI를 자식으로 나눔) | — |
-| L3 | 각각의 Component 는 자신만의 로직과 렌더링을 담당합니다. | 충족 | component-returns-view-and-function-component-draws, root-only-function-component | — |
+| L3 | 각각의 Component 는 자신만의 로직과 렌더링을 담당합니다. | 충족 | update-reruns-root-component-and-makes-new-view, update-makes-new-click-functions, component-returns-view-and-function-component-draws, root-only-function-component | — |
 | L4 | 반드시 함수형 컴포넌트 로 구현합니다. | 충족 | root-only-function-component | — |
 | L5 | 함수형 컴포넌트를 감싸는 FunctionComponent 클래스를 직접 만듭니다. | 충족 | root-only-function-component | — |
 | L6 | 이 클래스에는 아래 기능이 필요합니다. hooks 배열 (상태 저장용) | 충족 | hook-cells-are-found-by-call-order | — |

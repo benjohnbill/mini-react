@@ -174,6 +174,31 @@ describe("FunctionComponent update", () => {
     expect(container.querySelector("button")).toBe(button);
   });
 
+  it("F145 본문의 지역 변수는 update()마다 처음 값으로 돌아가, 클릭 함수가 바꿔도 화면은 그대로다", () => {
+    const container = createContainer();
+    let renderCount = 0;
+    const rootComponent: RootComponent = ({ on }) => {
+      renderCount++;
+      const [, setTick] = useState(0);
+      let localCount = 0;
+      on("inc", () => {
+        localCount++;
+        setTick((tick) => tick + 1);
+      });
+      return {
+        type: "button",
+        props: { "data-action": "inc" },
+        children: [String(localCount)],
+      };
+    };
+    new FunctionComponent(rootComponent).mount(container);
+
+    clickButton(container);
+
+    expect(renderCount).toBe(2);
+    expect(container.querySelector("button")?.textContent).toBe("0");
+  });
+
   it("F11 최상위 요소의 종류가 바뀐 뒤에도 클릭 함수가 불린다", () => {
     const container = createContainer();
     const rootComponent: RootComponent = ({ on }) => {

@@ -59,17 +59,23 @@ mini-react는 Virtual DOM, Diff, Patch, Hooks를 바닐라 TypeScript로 구현�
 
 ### LMS 문장 하나가 코드까지 내려가는 길
 
-LMS L3 "각각의 Component 는 자신만의 로직과 렌더링을 담당합니다." 한 줄이 코드의 함수 하나가 되기까지입니다.
+> "각각의 Component 는 자신만의 **로직**과 **렌더링**을 담당합니다." (LMS L3)
 
-| 걸음 | 정한 것 | 있는 곳 |
-| ---- | ------- | ------- |
-| 1. LMS 문장 | "각각의 Component 는 자신만의 **로직**과 **렌더링**을 담당합니다." | [요구사항 표](docs/requirements/phase-2.md)의 L3 |
-| 2. 단어의 뜻 | **렌더링** = Root Component를 불러 새 `View`를 돌려받는 일. DOM에 그리는 일은 포함하지 않습니다 | [`GLOSSARY.md`](GLOSSARY.md)의 렌더링 |
-| | **로직** = State와 클릭 함수. Root Component만 가지고, 자식 Component는 props로 받습니다 | [`GLOSSARY.md`](GLOSSARY.md)의 Root Component, 자식 Component |
-| 3. 결정 (ADR) | [Component는 `View`를 돌려주기까지만 하고, DOM에 그리는 일은 `FunctionComponent`의 `mount()`와 `update()`가 합니다](docs/adr/instance/component-returns-view-and-function-component-draws.md) | `docs/adr/instance/` |
-| | [Root Component만 `FunctionComponent`로 감싸고, 자식 Component는 props를 받아 `VNode`를 돌려주는 함수로 둡니다](docs/adr/render/root-only-function-component.md) | `docs/adr/render/` |
-| 4. 테스트 | F1, F8: `View`를 `container`에 그리고, 클릭 뒤 Root Component를 다시 부릅니다. F144: 본문에서 DOM을 직접 고치면 화면이 `View`와 어긋납니다. F70: 자식의 `useState`는 Root Instance의 칸에 섞입니다 | `src/function-component.test.ts` |
-| 5. 코드 | `renderedView()`가 Root Component를 불러 `View`를 돌려주고, DOM은 건드리지 않습니다. `mount()`와 `update()`가 그 `View`를 DOM에 반영합니다 | `src/function-component.ts` |
+Component의 뜻은 React 문서에서 찾을 수 있습니다. "로직"과 "렌더링"은 뜻을 정해야 코드로 옮길 수 있어서, 용어집 [`GLOSSARY.md`](GLOSSARY.md)에 먼저 적었습니다.
+
+| 단어 | 뜻 |
+| ---- | -- |
+| 렌더링 | Root Component를 불러 새 `View`를 돌려받는 일. DOM에 그리는 일은 포함하지 않습니다 |
+| Component의 로직 | State와 클릭 함수. Root Component만 가지고, 자식 Component는 값을 props로 받아 그리기만 합니다 |
+
+뜻을 정하면 결정(ADR)을 한 문장으로 쓸 수 있습니다.
+
+| 단어 | 결정 (ADR) |
+| ---- | ---------- |
+| 렌더링 | [`update()`는 Root Component 본문을 처음부터 다시 실행해 새 View를 만듭니다](docs/adr/render/update-reruns-root-component-and-makes-new-view.md) |
+| Component의 로직 | [`update()`는 Root Component 본문을 다시 실행하면서 클릭 함수도 새로 만들어, 이전 렌더링의 클릭 함수를 모두 바꿉니다](docs/adr/render/update-makes-new-click-functions.md) |
+
+결정이 한 문장이면 무엇을 테스트할지가 정해집니다. 두 결정의 테스트와 코드는 [docs/l3-tests-and-code.md](docs/l3-tests-and-code.md)에 있습니다.
 
 단계 9개의 정의와 ADR 수, L16 "useState" 한 줄이 결정 다섯 개로 퍼지는 표, `VNode`와 `Patch`와 `HookCell`의 타입은 [docs/architecture.md](docs/architecture.md)에 있습니다.
 
@@ -81,7 +87,7 @@ LMS 문장 → ADR → 테스트 → 코드의 연결은 자동으로 검사합�
 | 연결 | 검사 |
 | ---- | ---- |
 | LMS 문장 69개 → 근거 ADR 이름 | `npm run check`가 그 이름의 ADR 파일이 있는지 확인합니다 |
-| ADR 101개 → 테스트 ID | `npm run check`가 인용한 ID(342개)가 테스트에 있는지 확인합니다 |
+| ADR 102개 → 테스트 ID | `npm run check`가 인용한 ID(343개)가 테스트에 있는지 확인합니다 |
 | 테스트 → 코드 | `npm test`. CI가 PR마다 실행합니다 |
 
 ADR이 인용한 테스트 ID 하나를 테스트에 없는 ID로 바꾸면 `npm run check`가 실패합니다.
