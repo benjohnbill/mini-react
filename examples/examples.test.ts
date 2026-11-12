@@ -245,9 +245,14 @@ it("E11 장보기 목록의 손으로 고치는 판은 항목 추가를 누르�
   const memo = getMemoInput("#manual", 0);
   memo.value = "저지방";
   const firstLine = document.querySelector("#manual li");
+  const secondLine = document.querySelector("#manual li:nth-child(2)");
   clickButton('#manual [data-action="add"]');
   expect(document.querySelectorAll("#manual li")).toHaveLength(3);
   expect(document.querySelector("#manual li")).toBe(firstLine);
+  expect(document.querySelector("#manual li:nth-child(2)")).toBe(secondLine);
+  expect(
+    document.querySelector("#manual li:nth-child(3) span")?.textContent,
+  ).toBe("사과 - 1000원");
   expect(getMemoInput("#manual", 0)).toBe(memo);
   expect(getMemoInput("#manual", 0).value).toBe("저지방");
   expect(document.querySelector("#manual ul + p")?.textContent).toBe(
@@ -277,4 +282,24 @@ it("E12 장보기 목록의 손으로 고치는 판에서 첫 항목을 삭제�
   expect(document.querySelector("#manual ul + p + p")?.textContent).toBe(
     "목록이 비었어요",
   );
+});
+
+it("E13 장보기 목록의 손으로 고치는 판에서 맨 아래 항목을 삭제하면 그 항목의 값만 합계에서 빠지고, 빈 목록에 항목을 추가하면 빈 목록 문구가 사라집니다", () => {
+  startManualPanel();
+  clickButton('#manual li:last-child [data-action="delete"]');
+  expect(document.querySelector("#manual li span")?.textContent).toBe(
+    "우유 - 2000원",
+  );
+  expect(document.querySelector("#manual ul + p")?.textContent).toBe(
+    "합계: 2000원",
+  );
+  clickButton('#manual li [data-action="delete"]');
+  expect(document.querySelector("#manual ul + p + p")?.textContent).toBe(
+    "목록이 비었어요",
+  );
+  clickButton('#manual [data-action="add"]');
+  expect(document.querySelector("#manual ul + p")?.textContent).toBe(
+    "합계: 1000원",
+  );
+  expect(document.querySelector("#manual ul + p + p")?.textContent).toBe("");
 });
