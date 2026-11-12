@@ -78,32 +78,7 @@ Component의 뜻은 React 문서에서 찾을 수 있습니다. "로직"과 "렌
 
 ## Validation
 
-LMS 문장 → ADR → 테스트 → 코드의 연결은 자동으로 검사합니다.
-
-| 연결 | 검사 |
-| ---- | ---- |
-| LMS 문장 69개 → 근거 ADR 이름 | `npm run check`가 그 이름의 ADR 파일이 있는지 확인합니다 |
-| ADR 102개 → 테스트 ID | `npm run check`가 인용한 ID(343개)가 테스트에 있는지 확인합니다 |
-| 테스트 → 코드 | `npm test`. CI가 PR마다 실행합니다 |
-
-ADR이 인용한 테스트 ID 하나를 테스트에 없는 ID로 바꾸면 `npm run check`가 실패합니다.
-
-```text
-[실패] docs/adr/setter/setter-updates-without-batching.md: 테스트에 없는 ID를 인용했습니다: F9999
-```
-
-### 결정과 테스트를 잇는 네 층
-
-자동 검사는 ID가 있는지만 봅니다. 결정과 테스트의 뜻이 맞는지는 모릅니다. 그래서 놓치는 곳이 서로 다른 네 층을 겹칩니다(Swiss cheese model).
-
-![결정과 테스트가 어긋나는 세 경우가 쓰는 규칙, 기계 검사, 새 세션 리뷰, 사람의 설명 네 층을 지나며 서로 다른 층에서 잡히는 그림](docs/images/validation-layers.png)
-
-| 층 | 있는 곳 |
-| --- | --- |
-| 쓰는 규칙 | `CONVENTION.md`의 "결정과 테스트 잇기", "ADR 쓰기" |
-| 기계 검사 | `scripts/check-decision-links.mjs`. `npm run check`와 CI가 부릅니다 |
-| 새 세션 리뷰 | `CONVENTION.md`의 "에이전트". 결과는 PR 본문의 `새 세션 리뷰`에 적습니다 (예: 커밋 `08bbe4a`가 리뷰를 반영해 ADR의 인용을 바로잡았습니다) |
-| 사람의 설명 | `CONVENTION.md` 6번. 병합된 코드는 원리를 말로 설명할 수 있어야 합니다 |
+![결정과 테스트가 어긋나는 세 경우가 쓰는 규칙, 기계 검사, 새 세션 리뷰, 사람의 설명 네 층을 지나며, 각 층이 무엇이 강제하는지와 무엇을 검사하는지와 앞 층이 놓친 것을 어떻게 잡는지를 보여 주는 그림](docs/images/validation-layers.png)
 
 그림의 원본은 `docs/images/validation-layers.html`입니다.
 
