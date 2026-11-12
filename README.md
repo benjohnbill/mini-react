@@ -9,7 +9,7 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-7-3178C6?logo=typescript&logoColor=white)
 ![Runtime deps](https://img.shields.io/badge/runtime%20deps-0-brightgreen)
 
-[Overview](#overview) · [Architecture](#architecture) · [Validation](#validation) · [Demo](#demo) · [Getting Started](#getting-started) · [Environment](#environment) · [Team](#team)
+[Overview](#overview) · [Top-Down 작업과정](#top-down-작업과정) · [Architecture](#architecture) · [Validation](#validation) · [Demo](#demo) · [Getting Started](#getting-started) · [Environment](#environment) · [Team](#team)
 
 
 ## Overview
@@ -40,24 +40,9 @@ mini-react는 Virtual DOM, Diff, Patch, Hooks를 바닐라 TypeScript로 구현�
 - 컴포넌트가 화면에서 사라질 때(unmount) 정리하는 기능 없음
 
 
-## Architecture
+## Top-Down 작업과정
 
-이 저장소는 LMS 문장 → 결정(ADR) → 테스트 → 코드 순서로 따라 내려갈 수 있습니다. 이 절은 그 길을 Phase와 문장 하나의 순서로 보여 줍니다.
-
-### Phase 1과 Phase 2
-
-|         | 하는 일                                                         | 새 `View`를 만드는 것                           | LMS 문장                                                          |
-| ------- | --------------------------------------------------------------- | ----------------------------------------------- | ----------------------------------------------------------------- |
-| Phase 1 | 두 `View`(Virtual DOM)의 차이를 찾아, 그 차이만 DOM에 반영합니다 | 사람 (검증 페이지의 테스트 영역 HTML과 Patch 버튼) | S1 "Phase 1: Virtual DOM + Diff 알고리즘 + Patch"                 |
-| Phase 2 | State가 바뀌면 새 `View`를 만들어 Phase 1에 넘깁니다             | 클릭이 바꾼 State                               | L14 "State 가 바뀌면 → 화면이 자동으로 다시 그려져야 합니다."     |
-
-`View`는 화면 전체를 설명하는 값이고, LMS가 Virtual DOM이라 부르는 것입니다. 두 Phase는 `View`에서 만납니다. L20 "Phase 2 의 상태가 변경되어 다시 렌더링할 때, Phase 1 에서 만든 Virtual DOM 을 그대로 활용합니다."는 코드에서 `update()`가 `diffViews`와 `applyPatchesToDom`을 그대로 부르는 두 줄입니다.
-
-![Phase 2의 click, setter, instance, render가 만든 새 View와 Phase 1의 vnode가 만든 새 View가 diff로 모이고, patch가 DOM에 반영한 뒤 effect가 실행되는 그림](docs/images/architecture.png)
-
-상자의 `ADR` 숫자는 그 단계의 결정 수입니다. 그림의 원본은 `docs/images/architecture.html`입니다.
-
-### LMS 문장 하나가 코드까지 내려가는 길
+LMS 문장 → 결정(ADR) → 테스트 → 코드 순서로 작업했습니다. LMS 문장 하나로 그 순서를 보여 줍니다.
 
 > "각각의 Component 는 자신만의 **로직**과 **렌더링**을 담당합니다." (LMS L3)
 
@@ -76,6 +61,17 @@ Component의 뜻은 React 문서에서 찾을 수 있습니다. "로직"과 "렌
 | Component의 로직 | [`update()`는 Root Component 본문을 다시 실행하면서 클릭 함수도 새로 만들어, 이전 렌더링의 클릭 함수를 모두 바꿉니다](docs/adr/render/update-makes-new-click-functions.md) |
 
 결정이 한 문장이면 무엇을 테스트할지가 정해집니다. 두 결정의 테스트와 코드는 [docs/l3-tests-and-code.md](docs/l3-tests-and-code.md)에 있습니다.
+
+
+## Architecture
+
+### Data Flow
+
+`View`는 화면 전체를 설명하는 값이고, LMS가 Virtual DOM이라 부르는 것입니다. 두 Phase는 `View`에서 만납니다. L20 "Phase 2 의 상태가 변경되어 다시 렌더링할 때, Phase 1 에서 만든 Virtual DOM 을 그대로 활용합니다."는 코드에서 `update()`가 `diffViews`와 `applyPatchesToDom`을 그대로 부르는 두 줄입니다.
+
+![Phase 2의 click, setter, instance, render가 만든 새 View와 Phase 1의 vnode가 만든 새 View가 diff로 모이고, patch가 DOM에 반영한 뒤 effect가 실행되는 그림](docs/images/architecture.png)
+
+상자의 `ADR` 숫자는 그 단계의 결정 수입니다. 그림의 원본은 `docs/images/architecture.html`입니다.
 
 단계 9개의 정의와 ADR 수, L16 "useState" 한 줄이 결정 다섯 개로 퍼지는 표, `VNode`와 `Patch`와 `HookCell`의 타입은 [docs/architecture.md](docs/architecture.md)에 있습니다.
 
