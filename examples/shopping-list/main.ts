@@ -4,6 +4,7 @@ import {
   useState,
 } from "../../src/function-component";
 import type { VNode } from "../../src/vnode";
+import { startCreatedCounter } from "./created-counter";
 import { addedItem, getItemSum, type Item, initialItems } from "./items";
 import { startVanillaShoppingList } from "./vanilla";
 
@@ -68,8 +69,19 @@ const ShoppingListRootComponent: RootComponent = ({ on }): VNode => {
 
 const vanillaContainer = document.querySelector("#vanilla");
 const miniReactContainer = document.querySelector("#mini-react");
-if (vanillaContainer === null || miniReactContainer === null) {
-  throw new Error("#vanilla, #mini-react 요소가 필요합니다");
+const vanillaCreated = document.querySelector("#vanilla-created");
+const miniReactCreated = document.querySelector("#mini-react-created");
+if (
+  vanillaContainer === null ||
+  miniReactContainer === null ||
+  vanillaCreated === null ||
+  miniReactCreated === null
+) {
+  throw new Error(
+    "#vanilla, #mini-react, #vanilla-created, #mini-react-created 요소가 필요합니다",
+  );
 }
 startVanillaShoppingList(vanillaContainer);
 new FunctionComponent(ShoppingListRootComponent).mount(miniReactContainer);
+startCreatedCounter(vanillaContainer, vanillaCreated);
+startCreatedCounter(miniReactContainer, miniReactCreated);

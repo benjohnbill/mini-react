@@ -155,6 +155,10 @@ it("E7 장보기 목록의 Vanilla 판은 항목 추가를 누르면 입력란�
   expect(getMemoInput("#vanilla", 0)).not.toBe(memo);
   expect(getMemoInput("#vanilla", 0).value).toBe("");
   expect(document.activeElement).toBe(document.body);
+  await Promise.resolve();
+  expect(document.querySelector("#vanilla-created")?.textContent).toBe(
+    "방금 새로 만든 요소: 16개",
+  );
 });
 
 it("E8 장보기 목록의 mini-react 판은 항목 추가를 눌러도 같은 입력란과 같은 버튼이라, 친 메모와 버튼의 포커스가 남습니다", async () => {
@@ -171,6 +175,10 @@ it("E8 장보기 목록의 mini-react 판은 항목 추가를 눌러도 같은 �
   expect(getMemoInput("#mini-react", 0)).toBe(memo);
   expect(getMemoInput("#mini-react", 0).value).toBe("저지방");
   expect(document.activeElement).toBe(addButton);
+  await Promise.resolve();
+  expect(document.querySelector("#mini-react-created")?.textContent).toBe(
+    "방금 새로 만든 요소: 4개",
+  );
 });
 
 it("E9 한계 — 장보기 목록의 mini-react 판에서 첫 항목을 삭제하면, 친 메모가 지운 항목과 함께 사라지지 않고 첫 줄에 남습니다", async () => {
@@ -184,4 +192,8 @@ it("E9 한계 — 장보기 목록의 mini-react 판에서 첫 항목을 삭제�
   );
   expect(getMemoInput("#mini-react", 0)).toBe(memo);
   expect(getMemoInput("#mini-react", 0).value).toBe("저지방");
+  await Promise.resolve();
+  expect(document.querySelector("#mini-react-created")?.textContent).toBe(
+    "방금 새로 만든 요소: 0개",
+  );
 });

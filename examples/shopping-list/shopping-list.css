@@ -31,7 +31,6 @@ li {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 3px 0;
 }
 
 li span {
@@ -54,6 +53,38 @@ input {
 input:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 1px;
+}
+
+.hint {
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.created {
+  margin: 12px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--divider);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+/* 요소가 DOM에 새로 들어올 때만 실행되므로, 새로 만든 줄만 색이 바뀝니다. */
+li {
+  margin: 0 -6px;
+  padding: 3px 6px;
+  border-radius: 5px;
+  animation: created-line 900ms ease-out;
+}
+
+@keyframes created-line {
+  from {
+    background: light-dark(#ffd9a8, #6b4a1f);
+  }
+  to {
+    background: transparent;
+  }
 }
 
 @media (max-width: 560px) {
