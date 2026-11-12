@@ -9,7 +9,7 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-7-3178C6?logo=typescript&logoColor=white)
 ![Runtime deps](https://img.shields.io/badge/runtime%20deps-0-brightgreen)
 
-[Getting Started](#getting-started) · [Top-Down 작업과정](#top-down-작업과정) · [Architecture](#architecture) · [Validation](#validation) · [Demo](#demo) · [Examples](#examples) · [Environment](#environment) · [Team](#team)
+[Getting Started](#getting-started) · [Top-Down 작업과정](#top-down-작업과정) · [Architecture](#architecture) · [Validation](#validation) · [Why Mini-React?](#why-mini-react) · [Environment](#environment) · [Team](#team)
 
 
 ## Getting Started
@@ -84,11 +84,11 @@ mini-react/
 그림의 원본은 `docs/images/validation-layers.html`입니다.
 
 
-## Demo
+## Why Mini-React?
 
 ![메모를 친 뒤 항목 추가를 눌렀을 때, 전부 다시 만드는 Vanilla는 메모가 사라지고, 손으로 고치는 Vanilla는 합계를 놓치고, View 하나를 돌려주는 mini-react는 바뀐 곳만 고치는 것을 나란히 보여 주는 그림](docs/images/three-ways-to-update.png)
 
-### Vanilla와 mini-react: 장보기 목록
+### [사용자 관점] 전부 다시 만들기 vs. Mini-React
 
 같은 장보기 목록을 두 판으로 나란히 만들었습니다. Vanilla 판은 클릭마다 `innerHTML`로 전부 다시 만들고, mini-react 판은 바뀐 곳만 고칩니다. 판 아래의 숫자는 그 클릭에 새로 만든 요소의 수와 태그별 내역이고, mini-react 판 아래에는 그 클릭의 `Patch` 목록이 나옵니다. 새로 만든 줄은 잠깐 색이 바뀝니다. `npm run dev`를 실행한 뒤 `http://localhost:5173/examples/shopping-list/`에서 볼 수 있습니다.
 
@@ -97,9 +97,9 @@ mini-react/
 동작마다 두 판이 어떻게 다른지와 mini-react의 한계는 [examples/shopping-list/README.md](examples/shopping-list/README.md)에 있습니다.
 
 
-## Examples
+### [개발자 관점] 손으로 고치기 vs. Mini-React
 
-### Hello World
+#### Hello World
 
 Root Component는 화면을 설명하는 `VNode`를 돌려주는 함수입니다. 문자열도 VNode이므로 다음 코드만으로 첫 화면을 그릴 수 있습니다.
 
@@ -124,7 +124,7 @@ HTML은 [index.html](examples/hello-world/index.html)에 있습니다. 파일을
 
 ![Hello World 실행 화면](examples/hello-world/screenshot.png)
 
-### 더 많은 예제
+#### 더 많은 예제
 
 [예제 모음](examples/README.md)에서 mini-react의 주요 기능을 사용하는 더 많은 예제를 확인할 수 있습니다.
 
