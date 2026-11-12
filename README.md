@@ -31,7 +31,7 @@ npm run build      # 빌드
 
 ## Top-Down 작업과정
 
-LMS 문장 → 결정(ADR) → 테스트 → 코드 순서로 작업했습니다. LMS 문장 하나로 그 순서를 보여 줍니다.
+이 저장소는 LMS 문장 → 결정(ADR) → 테스트 → 코드 순서로 따라 내려갈 수 있습니다. LMS 문장 하나로 그 길을 보여 줍니다.
 
 > "각각의 Component 는 자신만의 **로직**과 **렌더링**을 담당합니다." (LMS L3)
 
@@ -115,7 +115,7 @@ HTML은 [index.html](examples/hello-world/index.html)에 있습니다. 파일을
 
 [예제 모음](examples/README.md)에서 mini-react의 주요 기능을 사용하는 더 많은 예제를 확인할 수 있습니다.
 
-Root Component를 쓸 때 지킬 규칙 여섯 개는 [docs/root-component-rules.md](docs/root-component-rules.md)에 있습니다.
+Root Component를 쓸 때 지킬 규칙 여섯 개는 [예제 모음의 "Root Component를 쓸 때"](examples/README.md#root-component를-쓸-때)에 있습니다.
 
 ## Environment
 ### Tech Stack
@@ -155,7 +155,7 @@ mini-react/
 | GitHub 계정   | 이름 | 브랜치    | 
 | :------------ | :--- | :-------- |
 | `benjohnbill` | 조진근 | `CJG`     |
-| `oyatmin1031` | 이민호 | (확인 필요) |
+| `oyatmin1031` | 이민호 | `LMH` |
 | `DavinAn6`    | 안다빈 | `Davin`   |
 
 

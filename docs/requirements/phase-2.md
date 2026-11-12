@@ -1,7 +1,7 @@
 ---
 kind: requirements
 source: LMS learning/1307 (Phase 2, 과제 개요, 공통 문장)
-status: 2026-11-11 기준
+status: 2026-11-12 기준
 ---
 
 # Phase 2 요구사항 표

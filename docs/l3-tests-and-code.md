@@ -1,12 +1,12 @@
 # LMS L3의 두 결정: 테스트와 코드
 
-[README의 "Top-Down 작업과정"](../README.md#top-down-작업과정)에서 이어집니다. LMS L3 "각각의 Component 는 자신만의 로직과 렌더링을 담당합니다."에서 나온 결정 두 개가 어느 테스트와 어느 코드로 내려가는지 적습니다. 코드와 테스트는 2026-11-12 기준 발췌입니다.
+[README의 "Top-Down 작업과정"](../README.md#top-down-작업과정)에서 이어집니다. LMS L3 "각각의 Component 는 자신만의 로직과 렌더링을 담당합니다."에서 나온 결정 두 개가 어느 테스트와 어느 코드로 내려가는지 적습니다. 코드와 테스트는 2026-11-12 기준 발췌이고, 코드 발췌의 `//` 설명은 이 문서에서 붙였습니다. 두 결정은 2026-11-12에 ADR 하나(`render-reruns-root-component-from-top`)를 나눠 쓴 문장이고, F145를 뺀 테스트와 코드는 그 전에 있었습니다.
 
 ## 렌더링
 
 > [`update()`는 Root Component 본문을 처음부터 다시 실행해 새 View를 만듭니다](adr/render/update-reruns-root-component-and-makes-new-view.md)
 
-### 이 결정이 정한 테스트
+### 이 결정을 지키는 테스트
 
 | 테스트 | 확인하는 것 | ADR의 줄 |
 | ------ | ----------- | -------- |
@@ -54,7 +54,7 @@ update(): void {
 
 > [`update()`는 Root Component 본문을 다시 실행하면서 클릭 함수도 새로 만들어, 이전 렌더링의 클릭 함수를 모두 바꿉니다](adr/render/update-makes-new-click-functions.md)
 
-### 이 결정이 정한 테스트
+### 이 결정을 지키는 테스트
 
 | 테스트 | 확인하는 것 | ADR의 줄 |
 | ------ | ----------- | -------- |
