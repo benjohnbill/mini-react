@@ -46,14 +46,7 @@ LMS 문장 → 결정(ADR) → 테스트 → 코드 순서로 작업했습니다
 
 > "각각의 Component 는 자신만의 **로직**과 **렌더링**을 담당합니다." (LMS L3)
 
-Component의 뜻은 React 문서에서 찾을 수 있습니다. "로직"과 "렌더링"은 뜻을 정해야 코드로 옮길 수 있어서, 용어집 [`GLOSSARY.md`](GLOSSARY.md)에 먼저 적었습니다.
-
-| 단어 | 뜻 |
-| ---- | -- |
-| 렌더링 | Root Component를 불러 새 `View`를 돌려받는 일. DOM에 그리는 일은 포함하지 않습니다 |
-| Component의 로직 | State와 클릭 함수. Root Component만 가지고, 자식 Component는 값을 props로 받아 그리기만 합니다 |
-
-뜻을 정하면 결정(ADR)을 한 문장으로 쓸 수 있습니다.
+"로직"과 "렌더링"의 뜻을 용어집 [`GLOSSARY.md`](GLOSSARY.md)에 정하고, 그 뜻에서 결정(ADR)을 한 문장씩 썼습니다.
 
 | 단어 | 결정 (ADR) |
 | ---- | ---------- |
