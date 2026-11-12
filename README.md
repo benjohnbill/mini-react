@@ -1,52 +1,74 @@
 <!-- readme: archetype=team -->
-# mini-react
-
-Virtual DOM, Diff, Patch, Hooks를 바닐라 TypeScript로 직접 구현하면서 React가 이 기능들을 갖춘 이유를 이해하는 크래프톤 정글 팀 프로젝트입니다.
+<p align="center">
+  <img src="docs/images/mini-react_README_banner.png" width="100%" alt="mini-react 배너">
+</p>
 
 [![CI](https://github.com/benjohnbill/mini-react/actions/workflows/ci.yml/badge.svg)](https://github.com/benjohnbill/mini-react/actions/workflows/ci.yml)
+[![Deploy](https://github.com/benjohnbill/mini-react/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/benjohnbill/mini-react/actions/workflows/deploy-pages.yml)
+[![Demo](https://img.shields.io/badge/demo-GitHub%20Pages-222?logo=github)](https://benjohnbill.github.io/mini-react/)
+![TypeScript](https://img.shields.io/badge/TypeScript-7-3178C6?logo=typescript&logoColor=white)
+![Runtime deps](https://img.shields.io/badge/runtime%20deps-0-brightgreen)
 
-Status: active
+[Overview](#overview) · [Environment](#environment) · [Architecture](#architecture) · [Demo](#demo) · [Getting Started](#getting-started) · [Team](#team)
 
-## 실행
 
-```bash
-npm ci             # 도구 설치 (Node 버전: .nvmrc)
-npm run dev        # 개발 서버에서 index.html 실행
-npm run typecheck  # 타입 검사
-npm run check      # 포맷, 린트, ADR이 인용한 테스트 ID 검사 (자동 수정: npm run format)
-npm test           # 단위 테스트
-npm run build      # 빌드
-```
+## Overview
+**mini-react란?**
+- React 없이 Virtual DOM, Diff, Patch, Hooks를 바닐라 TypeScript로 직접 구현한 프로젝트
+- React의 핵심 흐름만 남긴 간소화 버전
+- 구조를 단순하게 유지해서 코드를 따라 읽기만 해도 핵심 로직 파악 가능
 
-## Map (파일 지도)
+**지원하는 것**
+- 함수형 컴포넌트로 화면 렌더링
+- `useState`, `useEffect`, `useMemo`
+- State가 바뀌면 이전 화면과 비교해서 바뀐 부분만 DOM에 반영
 
+**핵심 용어**
+- **View**: 화면 전체를 설명하는 값 (= Virtual DOM)
+- **Patch**: 두 View의 차이를 DOM에 반영하기 위한 지시
+- **Root Component**: State를 가질 수 있는 최상위 함수형 컴포넌트
+- **칸(`HookCell`)**: Hook 호출 하나의 값을 담는 자리. `hooks` 배열에 호출 순서대로 저장
+
+**React와 다른 점**
+- State와 Hook은 최상위 컴포넌트에서만 사용 가능. 자식 컴포넌트는 props만 받음
+- 이벤트는 클릭만 지원
+- `key` 없음. 자식 요소는 같은 순서끼리 비교
+- 여러 번의 setState를 한 번에 묶어 처리하는 Batching 없음
+- 컴포넌트가 화면에서 사라질 때(unmount) 정리하는 기능 없음
+
+
+## Environment
+### Tech Stack
+| 구분 | 도구 | 용도 |
+| --- | --- | --- |
+| Language | TypeScript 7 | `strict`, `noUncheckedIndexedAccess` 켜고 사용 |
+| Runtime | Node.js 26 | 버전은 `.nvmrc` 기준 |
+| Dev Server / Build | Vite 8 | 개발 서버, 데모 페이지 빌드 |
+| Test | Vitest 5 + jsdom | 단위 테스트, 기능 테스트. jsdom으로 브라우저 DOM 환경 재현 |
+| Lint / Format | Biome 2 | 코드 형식 통일, 실수 자동 검사 |
+| CI | GitHub Actions | PR과 main push마다 typecheck → check → test → build 실행 |
+| Deploy | GitHub Pages | main에 머지되면 데모 페이지 자동 배포 |
+
+
+### Project Structure
 ```text
 mini-react/
 ├── src/
-│   ├── main.ts (entry)    페이지 시작 코드. index.html이 불러옴
-│   ├── vnode.ts           VNode, DOM ↔ VNode 변환
-│   ├── diff.ts            diffViews: 두 View → Patch 목록
-│   ├── patch.ts           Patch 형식, applyPatchesToDom
-│   ├── history.ts         StateHistory: 저장한 View 목록과 현재 위치
-│   ├── function-component.ts  FunctionComponent, useState (Root Component를 감싸 mount와 update로 그림)
-│   ├── test-pages/        검증 페이지와 데모 페이지 코드와 테스트
-│   └── *.test.ts          테스트는 소스 옆에 둠
-├── docs/adr/              되돌리기 어려운 결정과 이유. 폴더는 데이터가 지나가는 단계(docs/adr/README.md). 끝 두 줄의 ID = 지키는 테스트
-├── docs/requirements/     LMS 문장마다 충족 판정과 근거 ADR (phase-1.md, phase-2.md)
-├── scripts/
-│   └── check-decision-links.mjs   ADR이 인용한 테스트 ID 확인. npm run check가 부름
-├── .github/               PR 템플릿, CI(PR과 main push마다 검사)
-├── GLOSSARY.md            코드와 문서의 이름
-├── package.json           명령, 개발 도구. 런타임 의존성 없음. 설정은 tsconfig.json, biome.json, vitest.config.ts
-└── AGENTS.md              에이전트 규칙. CLAUDE.md가 이 파일로 연결
+│   ├── main.ts                진입점. index.html이 불러옴
+│   ├── vnode.ts               VNode 타입, DOM ↔ VNode 변환
+│   ├── diff.ts                diffViews: 두 View 비교 → Patch 목록
+│   ├── patch.ts               applyPatchesToDom: Patch 목록을 DOM에 반영
+│   ├── history.ts             StateHistory: 뒤로가기 / 앞으로가기
+│   ├── function-component.ts  FunctionComponent, useState / useEffect / useMemo
+│   ├── test-pages/            검증 페이지, 데모 페이지
+│   └── *.test.ts              테스트 (소스 옆에 둠)
+├── docs/
+│   ├── examples/              Hello World 등 사용 예제
+│   └── adr/                   설계 결정과 이유
+├── index.html                 데모 페이지
+└── GLOSSARY.md                코드와 문서에서 쓰는 용어 정리
 ```
 
-## 다음에 읽을 것
-
-- `CONVENTION.md`: 작업을 시작하기 전에 읽습니다.
-- `AGENTS.md`: 에이전트에게 작업을 맡기기 전에 읽습니다.
-
-Agents: if a path named here does not exist, report it to the owner.
 
 ## Architecture
 
@@ -143,6 +165,7 @@ patches   { type: "TEXT", path: [0, 1, 5, 3, 0], text: "2" }   동료 평가의 
           { type: "TEXT", path: [1, 3, 5, 2, 0], text: "2" }   순위표의 점수
 ```
 
+
 ## Demo
 
 ### Main Demo: 순위 페이지
@@ -189,44 +212,22 @@ Root Component 본문은 렌더링마다 처음부터 다시 실행됩니다. �
 
 근거 ADR (`docs/adr/` 아래): `render/hook-cells-are-found-by-call-order`, `render/hook-outside-render-throws-error`, `setter/setter-during-render-throws-error`, `render/hook-rule-kept-by-convention`, `team/hook-position-checked-by-lint`, `instance/component-returns-view-and-function-component-draws`.
 
-## 팀
-
-| GitHub 계정   | 브랜치    |
-| :------------ | :-------- |
-| `benjohnbill` | `CJG`     |
-| `oyatmin1031` | 직접 생성 |
-| `DavinAn6`    | `Davin`   |
-
-## 마일스톤 범위
-
-마일스톤과 할 일은 팀 보드에 있습니다: https://github.com/users/benjohnbill/projects/7
-
-## 규칙
-
-브랜치, PR, 커밋, 병합 규칙과, ADR의 결정과 테스트를 잇는 규칙은 `CONVENTION.md`에 있습니다.
-
-## 시작하기
-
-```bash
-git clone https://github.com/benjohnbill/mini-react.git
-cd mini-react
-git switch -c <이니셜>
-git push -u origin <이니셜>
-npm ci
-npm test
-```
-
-
 ## Getting Started
 
+### 설치 및 실행
 Node.js **26**이 필요합니다(`.nvmrc` 기준). 저장소를 내려받고 개발 서버를 실행하세요.
 
 ```bash
 git clone https://github.com/benjohnbill/mini-react.git
 cd mini-react
-npm ci
-npm run dev
+npm ci             # 도구 설치 (Node 버전: .nvmrc)
+npm run dev        # 개발 서버에서 index.html 실행
+npm run typecheck  # 타입 검사
+npm run check      # 포맷, 린트, ADR이 인용한 테스트 ID 검사 (자동 수정: npm run format)
+npm test           # 단위 테스트
+npm run build      # 빌드
 ```
+
 
 ### Hello World
 
@@ -274,3 +275,17 @@ HTML에는 화면을 그릴 요소와 TypeScript 파일을 불러오는 코드�
 ### 더 많은 예제
 
 [예제 모음](docs/examples/README.md)에서 mini-react의 주요 기능을 사용하는 더 많은 예제를 확인할 수 있습니다.
+
+## Team
+
+| GitHub 계정   | 이름 | 브랜치    | 
+| :------------ | :--- | :-------- |
+| `benjohnbill` | 조진근 | `CJG`     |
+| `oyatmin1031` | 이민호 | (확인 필요) |
+| `DavinAn6`    | 안다빈 | `Davin`   |
+
+
+### 작업 규칙
+- `CONVENTION.md`: 브랜치, PR, 커밋, 병합 규칙. 작업 시작 전에 읽음
+- `AGENTS.md`: 에이전트에게 작업을 맡기기 전에 읽음
+- 마일스톤과 할 일: [팀 보드](https://github.com/users/benjohnbill/projects/7)
