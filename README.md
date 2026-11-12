@@ -9,7 +9,7 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-7-3178C6?logo=typescript&logoColor=white)
 ![Runtime deps](https://img.shields.io/badge/runtime%20deps-0-brightgreen)
 
-[Getting Started](#getting-started) · [Top-Down 작업과정](#top-down-작업과정) · [Architecture](#architecture) · [Validation](#validation) · [Demo](#demo) · [Examples](#examples) · [Environment](#environment) · [Team](#team)
+[Getting Started](#getting-started) · [Top-Down 작업과정](#top-down-작업과정) · [Architecture](#architecture) · [Validation](#validation) · [Why Mini-React?](#why-mini-react) · [Environment](#environment) · [Team](#team)
 
 
 ## Getting Started
@@ -35,12 +35,14 @@ npm run build      # 빌드
 
 > "각각의 Component 는 자신만의 **로직**과 **렌더링**을 담당합니다." (LMS L3)
 
-"로직"과 "렌더링"의 뜻을 용어집 [`GLOSSARY.md`](GLOSSARY.md)에 정하고, 그 뜻에서 결정(ADR)을 한 문장씩 썼습니다.
+"로직"과 "렌더링"의 뜻은 용어집 [`GLOSSARY.md`](GLOSSARY.md)에 있고, 두 단어에 답하는 결정(ADR)은 한 문장씩입니다.
 
 | 단어 | 결정 (ADR) |
 | ---- | ---------- |
-| 렌더링 | [`update()`는 Root Component 본문을 처음부터 다시 실행해 새 View를 만듭니다](docs/adr/render/update-reruns-root-component-and-makes-new-view.md) |
-| Component의 로직 | [`update()`는 Root Component 본문을 다시 실행하면서 클릭 함수도 새로 만들어, 이전 렌더링의 클릭 함수를 모두 바꿉니다](docs/adr/render/update-makes-new-click-functions.md) |
+| 렌더링 | [Component는 View를 돌려주기까지만 하고, DOM에 그리는 일은 `FunctionComponent`의 `mount()`와 `update()`가 합니다](docs/adr/instance/component-returns-view-and-function-component-draws.md) |
+| Component의 로직 | [Root Component만 `FunctionComponent`로 감싸고, 자식 Component는 props를 받아 `VNode`를 돌려주는 함수로 둡니다](docs/adr/render/root-only-function-component.md) |
+
+LMS L10 "State 는 최상위 컴포넌트에서만 관리합니다"에 따라, 로직은 Root Component만 가집니다.
 
 결정이 한 문장이면 무엇을 테스트할지가 정해집니다. 두 결정의 테스트와 코드는 [docs/l3-tests-and-code.md](docs/l3-tests-and-code.md)에 있습니다.
 
@@ -84,51 +86,50 @@ mini-react/
 그림의 원본은 `docs/images/validation-layers.html`입니다.
 
 
-## Demo
+## Why Mini-React?
 
 ![메모를 친 뒤 항목 추가를 눌렀을 때, 전부 다시 만드는 Vanilla는 메모가 사라지고, 손으로 고치는 Vanilla는 합계를 놓치고, View 하나를 돌려주는 mini-react는 바뀐 곳만 고치는 것을 나란히 보여 주는 그림](docs/images/three-ways-to-update.png)
 
-### Vanilla와 mini-react: 장보기 목록
+### [사용자 관점] 전부 다시 만들기 vs. Mini-React
 
-같은 장보기 목록을 두 판으로 나란히 만들었습니다. Vanilla 판은 클릭마다 `innerHTML`로 전부 다시 만들고, mini-react 판은 바뀐 곳만 고칩니다. 판 아래의 숫자는 그 클릭에 새로 만든 요소의 수와 태그별 내역이고, mini-react 판 아래에는 그 클릭의 `Patch` 목록이 나옵니다. 새로 만든 줄은 잠깐 색이 바뀝니다. `npm run dev`를 실행한 뒤 `http://localhost:5173/examples/shopping-list/`에서 볼 수 있습니다.
+같은 장보기 목록을 두 판으로 나란히 만들었습니다. Vanilla 판은 클릭마다 `innerHTML`로 전부 다시 만들고, mini-react 판은 바뀐 곳만 고칩니다. 판 아래의 숫자는 그 클릭에 새로 만든 요소의 수와 태그별 내역이고, mini-react 판 아래에는 그 클릭의 `Patch` 목록이 나옵니다. 새로 만든 줄은 잠깐 색이 바뀝니다. [배포된 페이지에서 바로 열 수 있습니다](https://benjohnbill.github.io/mini-react/examples/shopping-list/). 로컬에서는 `npm run dev`를 실행한 뒤 `http://localhost:5173/examples/shopping-list/`에서 볼 수 있습니다.
 
 ![장보기 목록의 Vanilla 판과 mini-react 판이 나란히 있는 화면](examples/shopping-list/screenshot.png)
 
 동작마다 두 판이 어떻게 다른지와 mini-react의 한계는 [examples/shopping-list/README.md](examples/shopping-list/README.md)에 있습니다.
 
 
-## Examples
+### [개발자 관점] 손으로 고치기 vs. Mini-React
 
-### Hello World
+"항목 추가" 클릭 하나를 처리하는 코드입니다. 둘 다 `examples/shopping-list/`의 실제 코드입니다.
 
-Root Component는 화면을 설명하는 `VNode`를 돌려주는 함수입니다. 문자열도 VNode이므로 다음 코드만으로 첫 화면을 그릴 수 있습니다.
-
-[examples/hello-world/main.ts](examples/hello-world/main.ts):
-
-아래 상대 import 경로는 `examples/hello-world/` 기준입니다.
+손으로 고치기([`vanilla-manual.ts`](examples/shopping-list/vanilla-manual.ts))는 클릭이 바꾸는 곳을 클릭마다 모두 적습니다.
 
 ```ts
-import { FunctionComponent } from "../../src/function-component";
-
-const container = document.querySelector("#app");
-if (container === null) {
-  throw new Error("#app 요소가 필요합니다");
+if (action === "add") {
+  items.push(addedItem);
+  list.append(createLineFromItem(addedItem));
+  sum.textContent = `합계: ${getItemSum(items)}원`;
+  emptyMessage.textContent = "";
 }
-
-new FunctionComponent(() => "Hello World").mount(container);
 ```
 
-HTML은 [index.html](examples/hello-world/index.html)에 있습니다. 파일을 고치지 않고 실행할 수 있습니다.
+mini-react([`main.ts`](examples/shopping-list/main.ts))는 클릭이 State만 바꾸고, 화면은 Root Component가 State에서 다시 설명합니다.
 
-개발 서버를 실행한 뒤 브라우저에서 `http://localhost:5173/examples/hello-world/`를 여세요. 화면에 `Hello World`가 표시됩니다. 포트가 다르면 `5173`을 터미널에 표시된 포트로 바꾸세요.
+```ts
+on("add", () => setItems((currentItems) => [...currentItems, addedItem]));
+```
 
-![Hello World 실행 화면](examples/hello-world/screenshot.png)
+| | 손으로 고치기 | mini-react |
+| --- | --- | --- |
+| 클릭 하나가 적는 것 | 바뀌는 곳 전부 (줄, 합계, 빈 목록 문구) | 새 State 하나 |
+| 화면에 표시를 하나 더하면 | 그 표시를 바꾸는 클릭마다 한 줄씩 더 적습니다 | Root Component의 View 한 곳에 적습니다 |
+| 한 줄을 빠뜨리면 | 화면이 데이터와 어긋납니다 | 빠뜨릴 줄이 없습니다 |
 
-### 더 많은 예제
+손으로 고치는 판에서 `sum.textContent` 줄을 지우면 합계가 5000원에 머물고, 테스트 E11이 실패합니다. React 문서는 이 차이를 명령형 UI와 선언형 UI로 설명합니다([Reacting to Input with State](https://react.dev/learn/reacting-to-input-with-state)).
 
-[예제 모음](examples/README.md)에서 mini-react의 주요 기능을 사용하는 더 많은 예제를 확인할 수 있습니다.
+다른 예제와 Root Component를 쓸 때 지킬 규칙은 [예제 모음](examples/README.md)에 있습니다.
 
-Root Component를 쓸 때 지킬 규칙 여섯 개는 [예제 모음의 "Root Component를 쓸 때"](examples/README.md#root-component를-쓸-때)에 있습니다.
 
 ## Environment
 ### Tech Stack

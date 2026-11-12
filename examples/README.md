@@ -103,4 +103,4 @@ effect로 페이지의 배경을 바꿉니다.
 
 **사용 기능:** useState, on, 자식 Component
 
-[설명](shopping-list/README.md) · [TypeScript](shopping-list/main.ts) · [HTML](shopping-list/index.html) · [로컬 실행](http://localhost:5173/examples/shopping-list/)
+[설명](shopping-list/README.md) · [TypeScript](shopping-list/main.ts) · [HTML](shopping-list/index.html) · [배포판](https://benjohnbill.github.io/mini-react/examples/shopping-list/) · [로컬 실행](http://localhost:5173/examples/shopping-list/)

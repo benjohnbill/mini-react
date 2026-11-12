@@ -6,7 +6,7 @@
 
 ## 실행
 
-저장소 루트에서 `npm ci`, `npm run dev`를 실행한 뒤 [예제 열기](http://localhost:5173/examples/shopping-list/)로 이동합니다. 포트가 다르면 터미널에 표시된 주소의 포트로 바꿉니다.
+[예제 열기](https://benjohnbill.github.io/mini-react/examples/shopping-list/)에서 배포된 페이지를 바로 볼 수 있습니다. 로컬에서 실행하려면 저장소 루트에서 `npm ci`, `npm run dev`를 실행한 뒤 [로컬 예제](http://localhost:5173/examples/shopping-list/)로 이동합니다. 포트가 다르면 터미널에 표시된 주소의 포트로 바꿉니다.
 
 ## 확인할 동작
 
@@ -24,11 +24,24 @@
 
 판 아래의 "방금 새로 만든 요소"는 `MutationObserver`로 센 수와 태그별 내역입니다. mini-react 판 아래의 "이 클릭의 Patch"는 클릭 직전과 직후의 DOM을 `createVNodeFromDom`으로 읽어 `diffViews`로 비교한 목록입니다. 새로 만든 줄은 잠깐 색이 바뀝니다.
 
+## 손으로 고치는 판
+
+[`vanilla-manual.ts`](vanilla-manual.ts)는 같은 목록을 세 번째 방법으로 만든 코드입니다. 화면은 처음 한 번만 만들고, 클릭마다 바뀌는 곳(줄, 합계, 빈 목록 문구)을 하나씩 고칩니다. 예제 페이지에는 없고, 테스트가 직접 시작합니다.
+
+| 동작 | 손으로 고치는 판 | 테스트 |
+| ---- | ---------------- | ------ |
+| 메모를 친 뒤 "항목 추가"를 누릅니다 | 새 줄 하나만 붙이고 합계를 고쳐, 친 메모가 남습니다 | E11 |
+| 빵에 메모를 친 뒤 첫 항목을 "삭제"합니다 | 그 줄만 지워, 친 메모가 빵 줄에 남습니다 | E12 |
+| 맨 아래 항목을 "삭제"하고, 목록을 비운 뒤 "항목 추가"를 누릅니다 | 지운 항목의 값만 합계에서 빠지고, 빈 목록 문구가 사라집니다 | E13 |
+
+"항목 추가"를 처리하는 곳에서 `sum.textContent` 줄을 지우면 합계가 5000원에 머물고 E11이 실패합니다. 클릭을 처리하는 곳마다 바뀌는 곳을 모두 적어야 하기 때문입니다.
+
 ## 코드
 
 - [main.ts](main.ts): mini-react 판. useState, on, 자식 Component 사용 코드
 - [vanilla.ts](vanilla.ts): Vanilla 판. 클릭마다 `innerHTML`로 다시 만드는 코드
-- [items.ts](items.ts): 두 판이 함께 쓰는 항목과 합계 계산
+- [vanilla-manual.ts](vanilla-manual.ts): 손으로 고치는 판. 클릭마다 바뀌는 곳을 하나씩 고치는 코드
+- [items.ts](items.ts): 세 판이 함께 쓰는 항목과 합계 계산
 - [created-counter.ts](created-counter.ts): 클릭 뒤에 새로 들어온 요소를 세는 코드
 - [patch-list.ts](patch-list.ts): 클릭 전후의 DOM을 비교해 Patch 목록을 보여 주는 코드
 - [index.html](index.html): 실행용 HTML
