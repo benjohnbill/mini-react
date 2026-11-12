@@ -39,8 +39,10 @@ npm run build      # 빌드
 
 | 단어 | 결정 (ADR) |
 | ---- | ---------- |
-| 렌더링 | [`update()`는 Root Component 본문을 처음부터 다시 실행해 새 View를 만듭니다](docs/adr/render/update-reruns-root-component-and-makes-new-view.md) |
-| Component의 로직 | [`update()`는 Root Component 본문을 다시 실행하면서 클릭 함수도 새로 만들어, 이전 렌더링의 클릭 함수를 모두 바꿉니다](docs/adr/render/update-makes-new-click-functions.md) |
+| 렌더링 | [Component는 View를 돌려주기까지만 하고, DOM에 그리는 일은 `FunctionComponent`의 `mount()`와 `update()`가 합니다](docs/adr/instance/component-returns-view-and-function-component-draws.md) |
+| Component의 로직 | [Root Component만 `FunctionComponent`로 감싸고, 자식 Component는 props를 받아 `VNode`를 돌려주는 함수로 둡니다](docs/adr/render/root-only-function-component.md) |
+
+LMS는 "각각의 Component"라고 하지만, 로직은 Root Component만 가지도록 범위를 정했습니다.
 
 결정이 한 문장이면 무엇을 테스트할지가 정해집니다. 두 결정의 테스트와 코드는 [docs/l3-tests-and-code.md](docs/l3-tests-and-code.md)에 있습니다.
 
