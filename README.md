@@ -99,36 +99,35 @@ mini-react/
 
 ### [개발자 관점] 손으로 고치기 vs. Mini-React
 
-#### Hello World
+"항목 추가" 클릭 하나를 처리하는 코드입니다. 둘 다 `examples/shopping-list/`의 실제 코드입니다.
 
-Root Component는 화면을 설명하는 `VNode`를 돌려주는 함수입니다. 문자열도 VNode이므로 다음 코드만으로 첫 화면을 그릴 수 있습니다.
-
-[examples/hello-world/main.ts](examples/hello-world/main.ts):
-
-아래 상대 import 경로는 `examples/hello-world/` 기준입니다.
+손으로 고치기([`vanilla-manual.ts`](examples/shopping-list/vanilla-manual.ts))는 클릭이 바꾸는 곳을 클릭마다 모두 적습니다.
 
 ```ts
-import { FunctionComponent } from "../../src/function-component";
-
-const container = document.querySelector("#app");
-if (container === null) {
-  throw new Error("#app 요소가 필요합니다");
+if (action === "add") {
+  items.push(addedItem);
+  list.append(createLineFromItem(addedItem));
+  sum.textContent = `합계: ${getItemSum(items)}원`;
+  emptyMessage.textContent = "";
 }
-
-new FunctionComponent(() => "Hello World").mount(container);
 ```
 
-HTML은 [index.html](examples/hello-world/index.html)에 있습니다. 파일을 고치지 않고 실행할 수 있습니다.
+mini-react([`main.ts`](examples/shopping-list/main.ts))는 클릭이 State만 바꾸고, 화면은 Root Component가 State에서 다시 설명합니다.
 
-개발 서버를 실행한 뒤 브라우저에서 `http://localhost:5173/examples/hello-world/`를 여세요. 화면에 `Hello World`가 표시됩니다. 포트가 다르면 `5173`을 터미널에 표시된 포트로 바꾸세요.
+```ts
+on("add", () => setItems((currentItems) => [...currentItems, addedItem]));
+```
 
-![Hello World 실행 화면](examples/hello-world/screenshot.png)
+| | 손으로 고치기 | mini-react |
+| --- | --- | --- |
+| 클릭 하나가 적는 것 | 바뀌는 곳 전부 (줄, 합계, 빈 목록 문구) | 새 State 하나 |
+| 화면에 표시를 하나 더하면 | 그 표시를 바꾸는 클릭마다 한 줄씩 더 적습니다 | Root Component의 View 한 곳에 적습니다 |
+| 한 줄을 빠뜨리면 | 화면이 데이터와 어긋납니다 | 빠뜨릴 줄이 없습니다 |
 
-#### 더 많은 예제
+손으로 고치는 판에서 `sum.textContent` 줄을 지우면 합계가 5000원에 머물고, 테스트 E11이 실패합니다. React 문서는 이 차이를 명령형 UI와 선언형 UI로 설명합니다([Reacting to Input with State](https://react.dev/learn/reacting-to-input-with-state)).
 
-[예제 모음](examples/README.md)에서 mini-react의 주요 기능을 사용하는 더 많은 예제를 확인할 수 있습니다.
+다른 예제와 Root Component를 쓸 때 지킬 규칙은 [예제 모음](examples/README.md)에 있습니다.
 
-Root Component를 쓸 때 지킬 규칙 여섯 개는 [예제 모음의 "Root Component를 쓸 때"](examples/README.md#root-component를-쓸-때)에 있습니다.
 
 ## Environment
 ### Tech Stack
