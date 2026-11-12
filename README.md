@@ -159,6 +159,9 @@ Root Component를 쓸 때 지킬 규칙 여섯 개는 [예제 모음의 "Root Co
 
 
 ### 작업 규칙
-- `CONVENTION.md`: 브랜치, PR, 커밋, 병합 규칙. 작업 시작 전에 읽음
-- `AGENTS.md`: 에이전트에게 작업을 맡기기 전에 읽음
-- 마일스톤과 할 일: [팀 보드](https://github.com/users/benjohnbill/projects/7)
+
+- [`AGENTS.md`](AGENTS.md)
+- [`CONVENTION.md`](CONVENTION.md)
+- [`GLOSSARY.md`](GLOSSARY.md)
+- [`docs/adr/`](docs/adr/README.md)
+- [팀 보드](https://github.com/users/benjohnbill/projects/7)
