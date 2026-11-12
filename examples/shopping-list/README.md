@@ -18,7 +18,7 @@
 | 메모를 친 뒤 맨 아래 항목을 "삭제"합니다 | 남은 줄도 새로 만들어 친 메모가 사라집니다 | 맨 아래 줄만 지워 친 메모가 남습니다 | E10 |
 | 첫 줄에 메모를 친 뒤 첫 항목을 "삭제"합니다 | 친 메모가 사라집니다 | 친 메모가 첫 줄에 남아 다음 항목 옆에 보입니다 | E9 |
 
-마지막 줄은 mini-react의 한계입니다. `key`가 없어 같은 번호의 자식끼리 비교하므로([`diff-compares-same-index-children-first`](../../docs/adr/diff/diff-compares-same-index-children-first.md)), 입력란은 항목을 따라가지 않고 자리에 남습니다.
+마지막 줄은 mini-react의 한계입니다. `key`가 없어 같은 번호의 자식끼리 비교하므로([`diff-compares-same-index-children-first`](../../docs/adr/diff/diff-compares-same-index-children-first.md)), 입력란은 항목을 따라가지 않고 자리에 남습니다. React는 `key`로 줄을 옮겨 입력란이 항목을 따라갑니다. React의 동작은 이 저장소에서 재지 않았습니다.
 
 두 판 모두 메모를 State에 저장하지 않습니다. mini-react는 클릭 이벤트만 연결하기 때문입니다([`only-click-events-are-wired`](../../docs/adr/click/only-click-events-are-wired.md)).
 

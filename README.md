@@ -92,15 +92,7 @@ mini-react/
 
 ![장보기 목록의 Vanilla 판과 mini-react 판이 나란히 있는 화면](examples/shopping-list/screenshot.png)
 
-| 동작 | Vanilla (`innerHTML`) | mini-react | 테스트 |
-| ---- | --------------------- | ---------- | ------ |
-| "항목 추가"를 누릅니다 | 요소 16개를 새로 만듭니다 (줄 셋과 합계와 버튼 전부) | 요소 4개를 새로 만듭니다 (새 줄 하나) | E7, E8 |
-| 메모를 친 뒤 "항목 추가"를 누릅니다 | 입력란을 새로 만들어 친 메모가 사라집니다 | 같은 입력란이라 친 메모가 남습니다 | E7, E8 |
-| "항목 추가"에 포커스를 두고 누릅니다 | 버튼을 새로 만들어 포커스를 잃습니다 | 같은 버튼이라 포커스가 남습니다 | E7, E8 |
-| 메모를 친 뒤 맨 아래 항목을 "삭제"합니다 | 남은 줄도 새로 만들어 친 메모가 사라집니다 | 맨 아래 줄만 지워 친 메모가 남습니다 | E10 |
-| 첫 줄에 메모를 친 뒤 첫 항목을 "삭제"합니다 | 친 메모가 사라집니다 | 친 메모가 첫 줄에 남아 다음 항목 옆에 보입니다 | E9 |
-
-마지막 줄은 mini-react의 한계입니다. `key`가 없어 같은 번호의 자식끼리 비교하므로([`diff-compares-same-index-children-first`](docs/adr/diff/diff-compares-same-index-children-first.md)), 입력란은 항목을 따라가지 않고 자리에 남습니다. React는 `key`로 줄을 옮겨 입력란이 항목을 따라갑니다. React의 동작은 이 저장소에서 재지 않았습니다. 코드와 설명은 [`examples/shopping-list/`](examples/shopping-list/README.md)에 있습니다.
+동작마다 두 판이 어떻게 다른지와 mini-react의 한계는 [examples/shopping-list/README.md](examples/shopping-list/README.md)에 있습니다.
 
 
 ## Examples
