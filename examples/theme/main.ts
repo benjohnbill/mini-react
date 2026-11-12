@@ -3,8 +3,8 @@ import {
   type RootComponent,
   useEffect,
   useState,
-} from "../../../src/function-component";
-import type { VNode } from "../../../src/vnode";
+} from "../../src/function-component";
+import type { VNode } from "../../src/vnode";
 
 const theme: RootComponent = ({ on }): VNode => {
   const [isDark, setIsDark] = useState(false);
