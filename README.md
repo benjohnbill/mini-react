@@ -9,7 +9,7 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-7-3178C6?logo=typescript&logoColor=white)
 ![Runtime deps](https://img.shields.io/badge/runtime%20deps-0-brightgreen)
 
-[Overview](#overview) · [Environment](#environment) · [Architecture](#architecture) · [Demo](#demo) · [Getting Started](#getting-started) · [Team](#team)
+[Overview](#overview) · [Architecture](#architecture) · [Demo](#demo) · [How We Built It](#how-we-built-it) · [Environment](#environment) · [Getting Started](#getting-started) · [Team](#team)
 
 
 ## Overview
@@ -36,12 +36,12 @@
 
 ### Phase 1과 Phase 2
 
-|         | 하는 일                                                         | 새 `View`를 만드는 것                           | LMS 문장                                                          |
-| ------- | --------------------------------------------------------------- | ----------------------------------------------- | ----------------------------------------------------------------- |
-| Phase 1 | 두 `View`(Virtual DOM)의 차이를 찾아, 그 차이만 DOM에 반영합니다 | 사람 (검증 페이지의 테스트 영역 HTML과 Patch 버튼) | S1 "Phase 1: Virtual DOM + Diff 알고리즘 + Patch"                 |
-| Phase 2 | State가 바뀌면 새 `View`를 만들어 Phase 1에 넘깁니다             | 클릭이 바꾼 State                               | L14 "State 가 바뀌면 → 화면이 자동으로 다시 그려져야 합니다."     |
+|         | 하는 일                                                          | 새 `View`를 만드는 것                              |
+| ------- | ---------------------------------------------------------------- | -------------------------------------------------- |
+| Phase 1 | 두 `View`(Virtual DOM)의 차이를 찾아, 그 차이만 DOM에 반영합니다 | 사람 (검증 페이지의 테스트 영역 HTML과 Patch 버튼) |
+| Phase 2 | State가 바뀌면 새 `View`를 만들어 Phase 1에 넘깁니다             | 클릭이 바꾼 State                                  |
 
-`View`는 화면 전체를 설명하는 값이고, LMS가 Virtual DOM이라 부르는 것입니다. 두 Phase는 `View`에서 만납니다. L20 "Phase 2 의 상태가 변경되어 다시 렌더링할 때, Phase 1 에서 만든 Virtual DOM 을 그대로 활용합니다."는 코드에서 `update()`가 `diffViews`와 `applyPatchesToDom`을 그대로 부르는 두 줄입니다.
+`View`는 화면 전체를 설명하는 값이고, 과제 문서가 Virtual DOM이라 부르는 것입니다. 두 Phase는 `View`에서 만납니다. Phase 2의 `update()`는 Phase 1의 `diffViews`와 `applyPatchesToDom`을 그대로 부릅니다.
 
 ![Phase 2의 click, setter, instance, render가 만든 새 View와 Phase 1의 vnode가 만든 새 View가 diff로 모이고, patch가 DOM에 반영한 뒤 effect가 실행되는 그림](docs/images/architecture.png)
 
@@ -65,28 +65,6 @@
 
 - **닿는 LMS 문장:** 요구사항 표([Phase 1](docs/requirements/phase-1.md), [Phase 2](docs/requirements/phase-2.md))에서 그 단계의 ADR을 근거로 적은 문장의 수입니다.
 - **ADR:** 대체된 ADR 2개를 뺀 수입니다. 흐름 밖의 폴더는 `verification-page` 16, `demo-page` 2, `team` 11입니다.
-
-### LMS 문장 하나가 코드까지 내려가는 길
-
-LMS L16은 "최소 구현 대상: useState" 한 줄입니다. 이 한 줄을 구현하려면 다섯 가지를 정해야 했고, 결정마다 ADR 하나와 테스트가 있습니다.
-
-| 단계 | 결정 (ADR) | 모르고 쓰면 | 테스트 |
-| ---- | ---------- | ----------- | ------ |
-| `render` | [Hook의 칸은 렌더링마다 0부터 다시 세는 호출 순서로 찾습니다](docs/adr/render/hook-cells-are-found-by-call-order.md) | 조건에 따라 Hook 호출을 건너뛰면, 뒤쪽 Hook이 앞쪽 Hook의 칸 값을 받습니다 | F8, F17, F20, F21, F101, F102, F139, F42, F70 |
-| `render` | [초깃값이 함수이면 첫 렌더링에서 한 번 불러 그 결과를 씁니다](docs/adr/render/initial-value-function-is-called-once.md) | `useState(myFn)`은 `myFn()`의 반환값을 저장합니다 | F17, F19 |
-| `setter` | [setter에 함수를 넘기면 칸의 현재 값으로 불러 그 결과를 새 값으로 씁니다](docs/adr/setter/setter-accepts-updater-function.md) | `setFn(myFn)`은 `myFn(현재 값)`의 반환값을 저장합니다 | F23, F35, F38, F25 |
-| `setter` | [새 값이 칸의 값과 같으면(`Object.is`) `update()`를 부르지 않습니다](docs/adr/setter/setter-skips-same-value.md) | 배열을 `push`로 고친 뒤 같은 배열을 넘기면 화면이 바뀌지 않습니다 | F18, F24, F27~F31, F33, F36, F32, F34 |
-| `setter` | [칸에 새 값을 쓴 뒤 바로 `update()`를 부르고, 여러 호출을 모으지 않습니다 (범위)](docs/adr/setter/setter-updates-without-batching.md) | 클릭 한 번에 setter를 두 번 부르면 렌더링도 두 번 일어납니다 | F37, F35 |
-
-코드는 `src/function-component.ts`의 `useState`와 `createStateCell`입니다. 네 번째 결정은 [Demo](#demo)의 순위 페이지에서 5점인 사람의 `+`를 누르면 볼 수 있습니다.
-
-이 연결은 자동으로 검사합니다.
-
-| 연결 | 검사 |
-| ---- | ---- |
-| LMS 문장 69개 → 근거 ADR 이름 | `npm run check`가 그 이름의 ADR 파일이 있는지 확인합니다 |
-| ADR 101개 → 테스트 ID | `npm run check`가 인용한 ID(342개)가 테스트에 있는지 확인합니다 |
-| 테스트 → 코드 | `npm test`. CI가 PR마다 실행합니다 |
 
 ### Core Data Structures
 
@@ -127,9 +105,7 @@ patches   { type: "TEXT", path: [0, 1, 5, 3, 0], text: "2" }   동료 평가의 
 
 ### Main Demo: 순위 페이지
 
-<!-- 녹화한 GIF를 docs/images/ranking-page.gif에 넣은 뒤 아래 줄의 주석을 풉니다.
-![순위 페이지에서 클릭마다 Hook 패널이 지난 단계와 칸의 결과와 Patch 목록을 보여 주는 화면](docs/images/ranking-page.gif)
--->
+[배포된 페이지에서 바로 실행하기](https://benjohnbill.github.io/mini-react/#ranking-section)
 
 순위 페이지는 동료 평가의 점수를 누르면 순위가 바뀌는 화면입니다. 오른쪽의 Hook 패널은 클릭마다 그 클릭이 지난 단계, `hooks`의 칸마다 일어난 일, DOM에 적용한 `Patch` 목록을 보여 줍니다. `npm run dev`를 실행한 뒤 `http://localhost:5173/#ranking-section`에서 볼 수 있습니다.
 
@@ -140,7 +116,7 @@ patches   { type: "TEXT", path: [0, 1, 5, 3, 0], text: "2" }   동료 평가의 
 | 1위가 바뀌는 점수 `+` | `click` ~ `effect` | 다시 계산 | 실행 | `TEXT` 6 |
 | 5점인 사람의 `+` | `click`, `setter` | | | 없음 |
 
-코드는 `src/test-pages/ranking-page.ts`(Root Component)와 `src/test-pages/hook-panel.ts`(Hook 패널)이고, 위 표의 줄은 테스트 K3, K4, K5, K6, K8이 확인합니다.
+코드는 `src/test-pages/ranking-page.ts`(Root Component)와 `src/test-pages/hook-panel.ts`(Hook 패널)이고, 위 표의 줄은 `ranking-page.test.ts`의 테스트 K3, K4, K5, K6, K8이 확인합니다.
 
 ### Vanilla, mini-react, React의 차이
 
@@ -154,9 +130,20 @@ patches   { type: "TEXT", path: [0, 1, 5, 3, 0], text: "2" }   동료 평가의 
 
 mini-react는 `key`가 없어 같은 번호의 자식끼리 비교합니다([`diff-compares-same-index-children-first`](docs/adr/diff/diff-compares-same-index-children-first.md)). mini-react의 줄은 테스트 K5가 확인합니다. Vanilla와 React의 줄은 이 저장소에서 재지 않았습니다.
 
-## Root Component를 쓸 때
+## How We Built It
 
-추가 규칙의 근거 ADR (`docs/adr/` 아래): `render/hook-cells-are-found-by-call-order`, `render/hook-outside-render-throws-error`, `setter/setter-during-render-throws-error`, `render/hook-rule-kept-by-convention`, `team/hook-position-checked-by-lint`, `instance/component-returns-view-and-function-component-draws`.
+과제 문서의 문장 하나하나를 설계 결정(ADR)과 테스트로 연결하고, 그 연결이 끊기지 않았는지 CI가 PR마다 검사합니다.
+
+> 개발 원칙: (팀에서 정한 키워드 1~2개 + 한 줄 설명)
+
+```text
+과제 문서 문장 (LMS)  ─►  설계 결정 (ADR)  ─►  테스트  ─►  코드
+        69개                  101개         ADR이 인용한 ID 342개
+```
+
+- **LMS 문장:** 과제 문서의 문장입니다. Phase 1은 `S1~S32`, Phase 2는 `L1~L37`로 번호를 붙였습니다 → [docs/requirements](docs/requirements/README.md)
+- **ADR:** 결정 하나에 문서 하나이고, 무엇을 왜 그렇게 정했는지 적습니다 → [docs/adr](docs/adr/README.md)
+- **테스트 ID:** `F`는 `function-component.test.ts`, `K`는 `ranking-page.test.ts`의 테스트입니다
 
 ## Environment
 ### Tech Stack
