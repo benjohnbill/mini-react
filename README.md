@@ -61,9 +61,6 @@
 | 2 | [`render`](docs/adr/render/README.md) | 칸을 읽어 Root Component를 실행하고 새 `View`를 만듭니다 | 9 |
 | 2 | [`effect`](docs/adr/effect/README.md) | DOM 반영 직후 effect와 정리 함수를 부릅니다 | 8 |
 
-- **닿는 LMS 문장:** 요구사항 표([Phase 1](docs/requirements/phase-1.md), [Phase 2](docs/requirements/phase-2.md))에서 그 단계의 ADR을 근거로 적은 문장의 수입니다.
-- **ADR:** 대체된 ADR 2개를 뺀 수입니다. 흐름 밖의 폴더는 `verification-page` 16, `demo-page` 2, `team` 11입니다.
-
 ### Core Data Structures
 
 | 값 | 뜻 | 만드는 단계 → 쓰는 단계 |
