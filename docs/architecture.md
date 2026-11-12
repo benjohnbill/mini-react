@@ -33,7 +33,7 @@ LMS L16은 "최소 구현 대상: useState" 한 줄입니다. 이 한 줄을 구
 | `setter` | [새 값이 칸의 값과 같으면(`Object.is`) `update()`를 부르지 않습니다](adr/setter/setter-skips-same-value.md) | 배열을 `push`로 고친 뒤 같은 배열을 넘기면 화면이 바뀌지 않습니다 | F18, F24, F27~F31, F33, F36, F32, F34 |
 | `setter` | [칸에 새 값을 쓴 뒤 바로 `update()`를 부르고, 여러 호출을 모으지 않습니다 (범위)](adr/setter/setter-updates-without-batching.md) | 클릭 한 번에 setter를 두 번 부르면 렌더링도 두 번 일어납니다 | F37, F35 |
 
-코드는 `src/function-component.ts`의 `useState`와 `createStateCell`입니다. 네 번째 결정은 [Demo](../README.md#demo)의 순위 페이지에서 5점인 사람의 `+`를 누르면 볼 수 있습니다.
+코드는 `src/function-component.ts`의 `useState`와 `createStateCell`입니다. 네 번째 결정은 `npm run dev`를 실행한 뒤 `http://localhost:5173/#ranking-section`의 순위 페이지에서 5점인 사람의 `+`를 누르면 볼 수 있습니다.
 
 ## Core Data Structures
 

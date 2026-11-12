@@ -9,35 +9,24 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-7-3178C6?logo=typescript&logoColor=white)
 ![Runtime deps](https://img.shields.io/badge/runtime%20deps-0-brightgreen)
 
-[Overview](#overview) · [Top-Down 작업과정](#top-down-작업과정) · [Architecture](#architecture) · [Validation](#validation) · [Demo](#demo) · [Getting Started](#getting-started) · [Environment](#environment) · [Team](#team)
+[Getting Started](#getting-started) · [Top-Down 작업과정](#top-down-작업과정) · [Architecture](#architecture) · [Validation](#validation) · [Demo](#demo) · [Examples](#examples) · [Environment](#environment) · [Team](#team)
 
 
-## Overview
+## Getting Started
 
-mini-react는 Virtual DOM, Diff, Patch, Hooks를 바닐라 TypeScript로 구현하고, LMS 요구사항 문장마다 결정(ADR)과 테스트를 이어 그 연결을 `npm run check`로 검사하는 저장소입니다.
+### 설치 및 실행
+Node.js **26**이 필요합니다(`.nvmrc` 기준). 저장소를 내려받고 개발 서버를 실행하세요.
 
-**mini-react란?**
-- React 없이 Virtual DOM, Diff, Patch, Hooks를 바닐라 TypeScript로 직접 구현한 프로젝트
-- React의 핵심 흐름만 남긴 간소화 버전
-- 구조를 단순하게 유지해서 코드를 따라 읽기만 해도 핵심 로직 파악 가능
-
-**지원하는 것**
-- 함수형 컴포넌트로 화면 렌더링
-- `useState`, `useEffect`, `useMemo`
-- State가 바뀌면 이전 화면과 비교해서 바뀐 부분만 DOM에 반영
-
-**핵심 용어**
-- **View**: 화면 전체를 설명하는 값 (= Virtual DOM)
-- **Patch**: 두 View의 차이를 DOM에 반영하기 위한 지시
-- **Root Component**: State를 가질 수 있는 최상위 함수형 컴포넌트
-- **칸(`HookCell`)**: Hook 호출 하나의 값을 담는 자리. `hooks` 배열에 호출 순서대로 저장
-
-**React와 다른 점**
-- State와 Hook은 최상위 컴포넌트에서만 사용 가능. 자식 컴포넌트는 props만 받음
-- 이벤트는 클릭만 지원
-- `key` 없음. 자식 요소는 같은 순서끼리 비교
-- 여러 번의 setState를 한 번에 묶어 처리하는 Batching 없음
-- 컴포넌트가 화면에서 사라질 때(unmount) 정리하는 기능 없음
+```bash
+git clone https://github.com/benjohnbill/mini-react.git
+cd mini-react
+npm ci             # 도구 설치 (Node 버전: .nvmrc)
+npm run dev        # 개발 서버에서 index.html 실행
+npm run typecheck  # 타입 검사
+npm run check      # 포맷, 린트, ADR이 인용한 테스트 ID 검사 (자동 수정: npm run format)
+npm test           # 단위 테스트
+npm run build      # 빌드
+```
 
 
 ## Top-Down 작업과정
@@ -94,39 +83,8 @@ LMS 문장 → 결정(ADR) → 테스트 → 코드 순서로 작업했습니다
 
 마지막 줄은 mini-react의 한계입니다. `key`가 없어 같은 번호의 자식끼리 비교하므로([`diff-compares-same-index-children-first`](docs/adr/diff/diff-compares-same-index-children-first.md)), 입력란은 항목을 따라가지 않고 자리에 남습니다. React는 `key`로 줄을 옮겨 입력란이 항목을 따라갑니다. React의 동작은 이 저장소에서 재지 않았습니다. 코드와 설명은 [`examples/shopping-list/`](examples/shopping-list/README.md)에 있습니다.
 
-### Main Demo: 순위 페이지
 
-<!-- 녹화한 GIF를 docs/images/ranking-page.gif에 넣은 뒤 아래 줄의 주석을 풉니다.
-![순위 페이지에서 클릭마다 Hook 패널이 지난 단계와 칸의 결과와 Patch 목록을 보여 주는 화면](docs/images/ranking-page.gif)
--->
-
-순위 페이지는 동료 평가의 점수를 누르면 순위가 바뀌는 화면입니다. 오른쪽의 Hook 패널은 클릭마다 그 클릭이 지난 단계, `hooks`의 칸마다 일어난 일, DOM에 적용한 `Patch` 목록을 보여 줍니다. `npm run dev`를 실행한 뒤 `http://localhost:5173/#ranking-section`에서 볼 수 있습니다.
-
-| 클릭 | 지난 단계 | `useMemo` | `useEffect` | `Patch` |
-| ---- | --------- | --------- | ----------- | ------- |
-| 이름 가리기 | `click` ~ `patch` | 건너뜀 | 건너뜀 | `PROPS` 1, `TEXT` 7 |
-| 순위가 그대로인 점수 `+` | `click` ~ `patch` | 다시 계산 | 건너뜀 | `TEXT` 2 |
-| 1위가 바뀌는 점수 `+` | `click` ~ `effect` | 다시 계산 | 실행 | `TEXT` 6 |
-| 5점인 사람의 `+` | `click`, `setter` | | | 없음 |
-
-코드는 `src/test-pages/ranking-page.ts`(Root Component)와 `src/test-pages/hook-panel.ts`(Hook 패널)이고, 위 표의 줄은 테스트 K3, K4, K5, K6, K8이 확인합니다.
-
-## Getting Started
-
-### 설치 및 실행
-Node.js **26**이 필요합니다(`.nvmrc` 기준). 저장소를 내려받고 개발 서버를 실행하세요.
-
-```bash
-git clone https://github.com/benjohnbill/mini-react.git
-cd mini-react
-npm ci             # 도구 설치 (Node 버전: .nvmrc)
-npm run dev        # 개발 서버에서 index.html 실행
-npm run typecheck  # 타입 검사
-npm run check      # 포맷, 린트, ADR이 인용한 테스트 ID 검사 (자동 수정: npm run format)
-npm test           # 단위 테스트
-npm run build      # 빌드
-```
-
+## Examples
 
 ### Hello World
 
