@@ -47,6 +47,25 @@ npm run build      # 빌드
 
 ## Architecture
 
+### Project Structure
+```text
+mini-react/
+├── src/
+│   ├── main.ts                진입점. index.html이 불러옴
+│   ├── vnode.ts               VNode 타입, DOM ↔ VNode 변환
+│   ├── diff.ts                diffViews: 두 View 비교 → Patch 목록
+│   ├── patch.ts               applyPatchesToDom: Patch 목록을 DOM에 반영
+│   ├── history.ts             StateHistory: 뒤로가기 / 앞으로가기
+│   ├── function-component.ts  FunctionComponent, useState / useEffect / useMemo
+│   ├── test-pages/            검증 페이지, 데모 페이지
+│   └── *.test.ts              테스트 (소스 옆에 둠)
+├── examples/                 Hello World 등 실행 가능한 사용 예제
+├── docs/
+│   └── adr/                   설계 결정과 이유
+├── index.html                 데모 페이지
+└── GLOSSARY.md                코드와 문서에서 쓰는 용어 정리
+```
+
 ### Data Flow
 
 `View`는 화면 전체를 설명하는 값이고, LMS가 Virtual DOM이라 부르는 것입니다. 두 Phase는 `View`에서 만납니다. L20 "Phase 2 의 상태가 변경되어 다시 렌더링할 때, Phase 1 에서 만든 Virtual DOM 을 그대로 활용합니다."는 코드에서 `update()`가 `diffViews`와 `applyPatchesToDom`을 그대로 부르는 두 줄입니다.
@@ -128,26 +147,6 @@ Root Component를 쓸 때 지킬 규칙 여섯 개는 [예제 모음의 "Root Co
 | Lint / Format | Biome 2 | 코드 형식 통일, 실수 자동 검사 |
 | CI | GitHub Actions | PR과 main push마다 typecheck → check → test → build 실행 |
 | Deploy | GitHub Pages | main에 머지되면 데모 페이지 자동 배포 |
-
-
-### Project Structure
-```text
-mini-react/
-├── src/
-│   ├── main.ts                진입점. index.html이 불러옴
-│   ├── vnode.ts               VNode 타입, DOM ↔ VNode 변환
-│   ├── diff.ts                diffViews: 두 View 비교 → Patch 목록
-│   ├── patch.ts               applyPatchesToDom: Patch 목록을 DOM에 반영
-│   ├── history.ts             StateHistory: 뒤로가기 / 앞으로가기
-│   ├── function-component.ts  FunctionComponent, useState / useEffect / useMemo
-│   ├── test-pages/            검증 페이지, 데모 페이지
-│   └── *.test.ts              테스트 (소스 옆에 둠)
-├── examples/                 Hello World 등 실행 가능한 사용 예제
-├── docs/
-│   └── adr/                   설계 결정과 이유
-├── index.html                 데모 페이지
-└── GLOSSARY.md                코드와 문서에서 쓰는 용어 정리
-```
 
 
 ## Team
