@@ -158,12 +158,12 @@ npm run build      # 빌드
 
 Root Component는 화면을 설명하는 `VNode`를 돌려주는 함수입니다. 문자열도 VNode이므로 다음 코드만으로 첫 화면을 그릴 수 있습니다.
 
-[docs/examples/hello-world/main.ts](docs/examples/hello-world/main.ts):
+[examples/hello-world/main.ts](examples/hello-world/main.ts):
 
-아래 상대 import 경로는 `docs/examples/hello-world/` 기준입니다.
+아래 상대 import 경로는 `examples/hello-world/` 기준입니다.
 
 ```ts
-import { FunctionComponent } from "../../../src/function-component";
+import { FunctionComponent } from "../../src/function-component";
 
 const container = document.querySelector("#app");
 if (container === null) {
@@ -173,15 +173,15 @@ if (container === null) {
 new FunctionComponent(() => "Hello World").mount(container);
 ```
 
-HTML은 [index.html](docs/examples/hello-world/index.html)에 있습니다. 파일을 고치지 않고 실행할 수 있습니다.
+HTML은 [index.html](examples/hello-world/index.html)에 있습니다. 파일을 고치지 않고 실행할 수 있습니다.
 
-개발 서버를 실행한 뒤 브라우저에서 `http://localhost:5173/docs/examples/hello-world/`를 여세요. 화면에 `Hello World`가 표시됩니다. 포트가 다르면 `5173`을 터미널에 표시된 포트로 바꾸세요.
+개발 서버를 실행한 뒤 브라우저에서 `http://localhost:5173/examples/hello-world/`를 여세요. 화면에 `Hello World`가 표시됩니다. 포트가 다르면 `5173`을 터미널에 표시된 포트로 바꾸세요.
 
-![Hello World 실행 화면](docs/examples/hello-world/screenshot.png)
+![Hello World 실행 화면](examples/hello-world/screenshot.png)
 
 ### 더 많은 예제
 
-[예제 모음](docs/examples/README.md)에서 mini-react의 주요 기능을 사용하는 더 많은 예제를 확인할 수 있습니다.
+[예제 모음](examples/README.md)에서 mini-react의 주요 기능을 사용하는 더 많은 예제를 확인할 수 있습니다.
 
 Root Component를 쓸 때 지킬 규칙 여섯 개는 [docs/root-component-rules.md](docs/root-component-rules.md)에 있습니다.
 
@@ -210,8 +210,8 @@ mini-react/
 │   ├── function-component.ts  FunctionComponent, useState / useEffect / useMemo
 │   ├── test-pages/            검증 페이지, 데모 페이지
 │   └── *.test.ts              테스트 (소스 옆에 둠)
+├── examples/                 Hello World 등 실행 가능한 사용 예제
 ├── docs/
-│   ├── examples/              Hello World 등 사용 예제
 │   └── adr/                   설계 결정과 이유
 ├── index.html                 데모 페이지
 └── GLOSSARY.md                코드와 문서에서 쓰는 용어 정리
