@@ -77,3 +77,13 @@ effect로 페이지의 배경을 바꿉니다.
 **사용 기능:** createVNodeFromDom, diffViews, applyPatchesToDom, StateHistory
 
 [설명](history/README.md) · [TypeScript](history/main.ts) · [HTML](history/index.html) · [로컬 실행](http://localhost:5173/examples/history/)
+
+## 장보기 목록 (Vanilla와 비교)
+
+[![장보기 목록 실행 화면](shopping-list/screenshot.png)](shopping-list/README.md)
+
+같은 장보기 목록을 Vanilla 판과 mini-react 판으로 나란히 두고, 클릭 뒤에 입력란의 메모와 버튼의 포커스가 남는지 비교합니다.
+
+**사용 기능:** useState, on, 자식 Component
+
+[설명](shopping-list/README.md) · [TypeScript](shopping-list/main.ts) · [HTML](shopping-list/index.html) · [로컬 실행](http://localhost:5173/examples/shopping-list/)

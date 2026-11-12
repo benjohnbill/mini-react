@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>장보기 목록 | mini-react</title>
+    <link rel="stylesheet" href="../examples.css" />
+    <link rel="stylesheet" href="./shopping-list.css" />
+  </head>
+  <body>
+    <main>
+      <div id="app" class="panels">
+        <section>
+          <h2>Vanilla</h2>
+          <p class="caption">클릭마다 전부 다시 만듭니다 (<code>innerHTML</code>)</p>
+          <div id="vanilla"></div>
+        </section>
+        <section>
+          <h2>mini-react</h2>
+          <p class="caption">바뀐 곳만 고칩니다 (<code>Patch</code>)</p>
+          <div id="mini-react"></div>
+        </section>
+      </div>
+    </main>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
