@@ -196,11 +196,11 @@ Root Component는 화면을 설명하는 `VNode`를 돌려주는 함수입니다
 new FunctionComponent(() => "Hello World").mount(container);
 ```
 
-`npm run dev` 실행 후 `http://localhost:5173/docs/examples/hello-world/`에서 확인합니다. 전체 코드: [main.ts](docs/examples/hello-world/main.ts) · [index.html](docs/examples/hello-world/index.html)
+`npm run dev` 실행 후 `http://localhost:5173/examples/hello-world/`에서 확인합니다. 전체 코드: [main.ts](examples/hello-world/main.ts) · [index.html](examples/hello-world/index.html)
 
-![Hello World 실행 화면](docs/examples/hello-world/screenshot.png)
+![Hello World 실행 화면](examples/hello-world/screenshot.png)
 
-더 많은 예제와 Root Component 작성 규칙은 [예제 모음](docs/examples/README.md)에 있습니다.
+더 많은 예제와 Root Component 작성 규칙은 [예제 모음](examples/README.md)에 있습니다.
 
 ## Team
 

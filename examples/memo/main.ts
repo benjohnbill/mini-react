@@ -3,8 +3,8 @@ import {
   type RootComponent,
   useMemo,
   useState,
-} from "../../../src/function-component";
-import type { VNode } from "../../../src/vnode";
+} from "../../src/function-component";
+import type { VNode } from "../../src/vnode";
 
 // 계산 횟수를 눈으로 확인하기 위한 기록이며, 화면 갱신은 State가 담당합니다.
 let computationCount = 0;
