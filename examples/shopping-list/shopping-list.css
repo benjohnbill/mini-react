@@ -1,0 +1,116 @@
+main {
+  width: 100%;
+  max-width: min(760px, 100%);
+}
+
+.panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.panels h2 {
+  margin: 0 0 2px;
+  font-size: 15px;
+  color: inherit;
+}
+
+.caption {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+ul {
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+}
+
+li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+li span {
+  flex: 1;
+  min-width: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+input {
+  width: 96px;
+  padding: 4px 6px;
+  border: 1px solid var(--divider);
+  border-radius: 5px;
+  font: inherit;
+  font-size: 13px;
+  color: inherit;
+  background: var(--surface);
+}
+
+input:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+
+.hint {
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.created {
+  margin: 12px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--divider);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+.created-detail {
+  min-height: 20px;
+  margin: 0;
+  font:
+    12px / 1.5 ui-monospace,
+    SFMono-Regular,
+    Consolas,
+    monospace;
+  color: var(--muted);
+}
+
+h3 {
+  margin: 12px 0 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+pre {
+  min-height: 40px;
+}
+
+/* 요소가 DOM에 새로 들어올 때만 실행되므로, 새로 만든 줄만 색이 바뀝니다. */
+li {
+  margin: 0 -6px;
+  padding: 3px 6px;
+  border-radius: 5px;
+  animation: created-line 900ms ease-out;
+}
+
+@keyframes created-line {
+  from {
+    background: light-dark(#ffd9a8, #6b4a1f);
+  }
+  to {
+    background: transparent;
+  }
+}
+
+@media (max-width: 560px) {
+  .panels {
+    grid-template-columns: 1fr;
+  }
+}

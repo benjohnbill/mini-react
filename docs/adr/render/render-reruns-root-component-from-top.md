@@ -1,5 +1,5 @@
 ---
-status: proposed
+status: superseded by update-reruns-root-component-and-makes-new-view, update-makes-new-click-functions
 ---
 
 # `update()`는 Root Component 본문을 처음부터 다시 실행해 새 View와 새 클릭 함수를 만듭니다

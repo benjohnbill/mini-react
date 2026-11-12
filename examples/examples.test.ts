@@ -1,10 +1,11 @@
 /// <reference types="vite/client" />
-import { afterEach, expect, it } from "vitest";
+import { afterEach, expect, it, vi } from "vitest";
 import compositionHtml from "./composition/index.html?raw";
 import counterHtml from "./counter/index.html?raw";
 import helloWorldHtml from "./hello-world/index.html?raw";
 import historyHtml from "./history/index.html?raw";
 import memoHtml from "./memo/index.html?raw";
+import shoppingListHtml from "./shopping-list/index.html?raw";
 import themeHtml from "./theme/index.html?raw";
 
 const exampleHtml = {
@@ -14,6 +15,7 @@ const exampleHtml = {
   memo: memoHtml,
   composition: compositionHtml,
   history: historyHtml,
+  "shopping-list": shoppingListHtml,
 };
 
 function startExample(name: keyof typeof exampleHtml): void {
@@ -24,6 +26,27 @@ function clickButton(selector: string): void {
   const button = document.querySelector(selector);
   if (!(button instanceof HTMLButtonElement)) throw new Error(selector);
   button.click();
+}
+
+// 같은 예제를 여러 테스트에서 시작하려고, 모듈을 다시 불러 시작 코드를 다시 실행합니다.
+async function startShoppingList(): Promise<void> {
+  vi.resetModules();
+  startExample("shopping-list");
+  await import("./shopping-list/main");
+}
+
+function getMemoInput(panelSelector: string, index: number): HTMLInputElement {
+  const input = document.querySelectorAll(`${panelSelector} input`)[index];
+  if (!(input instanceof HTMLInputElement)) {
+    throw new Error(`${panelSelector} input ${index}`);
+  }
+  return input;
+}
+
+function getButton(selector: string): HTMLButtonElement {
+  const button = document.querySelector(selector);
+  if (!(button instanceof HTMLButtonElement)) throw new Error(selector);
+  return button;
 }
 
 afterEach(() => {
@@ -119,4 +142,91 @@ it("E6 화면 이력을 이동하고 뒤로 간 뒤 새 이력을 저장합니�
   expect(document.querySelector("#view")?.textContent).toBe("변경한 화면 2");
   expect(document.querySelector("#position")?.textContent).toBe("이력: 2 / 2");
   expect(document.querySelector("#forward")).toHaveProperty("disabled", true);
+});
+
+it("E7 장보기 목록의 Vanilla 판은 항목 추가를 누르면 입력란과 버튼을 새로 만들어, 친 메모와 버튼의 포커스가 사라집니다", async () => {
+  await startShoppingList();
+  const memo = getMemoInput("#vanilla", 0);
+  memo.value = "저지방";
+  const addButton = getButton('#vanilla [data-action="add"]');
+  addButton.focus();
+  addButton.click();
+  expect(document.querySelectorAll("#vanilla li")).toHaveLength(3);
+  expect(getMemoInput("#vanilla", 0)).not.toBe(memo);
+  expect(getMemoInput("#vanilla", 0).value).toBe("");
+  expect(document.activeElement).toBe(document.body);
+  await Promise.resolve();
+  expect(document.querySelector("#vanilla-created")?.textContent).toBe(
+    "방금 새로 만든 요소: 16개",
+  );
+  expect(document.querySelector("#vanilla-created-detail")?.textContent).toBe(
+    "ul 1, li 3, span 3, button 4, input 3, p 2",
+  );
+});
+
+it("E8 장보기 목록의 mini-react 판은 항목 추가를 눌러도 같은 입력란과 같은 버튼이라, 친 메모와 버튼의 포커스가 남습니다", async () => {
+  await startShoppingList();
+  const memo = getMemoInput("#mini-react", 0);
+  memo.value = "저지방";
+  const addButton = getButton('#mini-react [data-action="add"]');
+  addButton.focus();
+  addButton.click();
+  expect(document.querySelectorAll("#mini-react li")).toHaveLength(3);
+  expect(document.querySelector("#mini-react p")?.textContent).toBe(
+    "합계: 6000원",
+  );
+  expect(getMemoInput("#mini-react", 0)).toBe(memo);
+  expect(getMemoInput("#mini-react", 0).value).toBe("저지방");
+  expect(document.activeElement).toBe(addButton);
+  await Promise.resolve();
+  expect(document.querySelector("#mini-react-created")?.textContent).toBe(
+    "방금 새로 만든 요소: 4개",
+  );
+  expect(
+    document.querySelector("#mini-react-created-detail")?.textContent,
+  ).toBe("li 1, span 1, button 1, input 1");
+  expect(document.querySelector("#mini-react-patches")?.textContent).toBe(
+    'INSERT [0, 2] <li>\nTEXT [1, 0] "합계: 6000원"',
+  );
+});
+
+it("E9 한계 — 장보기 목록의 mini-react 판에서 첫 항목을 삭제하면, 친 메모가 지운 항목과 함께 사라지지 않고 첫 줄에 남습니다", async () => {
+  await startShoppingList();
+  const memo = getMemoInput("#mini-react", 0);
+  memo.value = "저지방";
+  clickButton('#mini-react [data-action="delete-0"]');
+  expect(document.querySelectorAll("#mini-react li")).toHaveLength(1);
+  expect(document.querySelector("#mini-react li span")?.textContent).toBe(
+    "빵 - 3000원",
+  );
+  expect(getMemoInput("#mini-react", 0)).toBe(memo);
+  expect(getMemoInput("#mini-react", 0).value).toBe("저지방");
+  await Promise.resolve();
+  expect(document.querySelector("#mini-react-created")?.textContent).toBe(
+    "방금 새로 만든 요소: 0개",
+  );
+});
+
+it("E10 장보기 목록에서 맨 아래 항목을 삭제하면, Vanilla 판은 남은 줄도 새로 만들어 친 메모가 사라지고 mini-react 판은 그 줄만 지워 친 메모가 남습니다", async () => {
+  await startShoppingList();
+  getMemoInput("#vanilla", 0).value = "저지방";
+  const memo = getMemoInput("#mini-react", 0);
+  memo.value = "저지방";
+  clickButton('#vanilla [data-action="delete"][data-index="1"]');
+  clickButton('#mini-react [data-action="delete-1"]');
+  expect(document.querySelectorAll("#vanilla li")).toHaveLength(1);
+  expect(getMemoInput("#vanilla", 0).value).toBe("");
+  expect(document.querySelectorAll("#mini-react li")).toHaveLength(1);
+  expect(getMemoInput("#mini-react", 0)).toBe(memo);
+  expect(getMemoInput("#mini-react", 0).value).toBe("저지방");
+  expect(document.querySelector("#mini-react-patches")?.textContent).toBe(
+    'REMOVE [0, 1]\nTEXT [1, 0] "합계: 2000원"',
+  );
+  await Promise.resolve();
+  expect(document.querySelector("#vanilla-created")?.textContent).toBe(
+    "방금 새로 만든 요소: 8개",
+  );
+  expect(document.querySelector("#mini-react-created")?.textContent).toBe(
+    "방금 새로 만든 요소: 0개",
+  );
 });

@@ -9,135 +9,132 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-7-3178C6?logo=typescript&logoColor=white)
 ![Runtime deps](https://img.shields.io/badge/runtime%20deps-0-brightgreen)
 
-[Overview](#overview) · [Architecture](#architecture) · [Demo](#demo) · [How We Built It](#how-we-built-it) · [Environment](#environment) · [Getting Started](#getting-started) · [Team](#team)
+[Getting Started](#getting-started) · [Top-Down 작업과정](#top-down-작업과정) · [Architecture](#architecture) · [Validation](#validation) · [Demo](#demo) · [Examples](#examples) · [Environment](#environment) · [Team](#team)
 
 
-## Overview
-**mini-react란?**
-- React 없이 Virtual DOM, Diff, Patch, Hooks를 바닐라 TypeScript로 직접 구현한 프로젝트
-- React의 핵심 흐름만 남긴 간소화 버전
-- 구조를 단순하게 유지해서 코드를 따라 읽기만 해도 핵심 로직 파악 가능
+## Getting Started
 
-**Features**
-- 함수형 컴포넌트로 화면 렌더링
-- `useState`, `useEffect`, `useMemo`
-- State가 바뀌면 이전 화면과 비교해서 바뀐 부분만 DOM에 반영
+### 설치 및 실행
+Node.js **26**이 필요합니다(`.nvmrc` 기준). 저장소를 내려받고 개발 서버를 실행하세요.
 
-**React와 다른 점**
-- State와 Hook은 최상위 컴포넌트에서만 사용 가능. 자식 컴포넌트는 props만 받음
-- 이벤트는 클릭만 지원
-- `key` 없음. 자식 요소는 같은 순서끼리 비교
-- 여러 번의 setState를 한 번에 묶어 처리하는 Batching 없음
-- 컴포넌트가 화면에서 사라질 때(unmount) 정리하는 기능 없음
+```bash
+git clone https://github.com/benjohnbill/mini-react.git
+cd mini-react
+npm ci             # 도구 설치 (Node 버전: .nvmrc)
+npm run dev        # 개발 서버에서 index.html 실행
+npm run typecheck  # 타입 검사
+npm run check      # 포맷, 린트, ADR이 인용한 테스트 ID 검사 (자동 수정: npm run format)
+npm test           # 단위 테스트
+npm run build      # 빌드
+```
+
+
+## Top-Down 작업과정
+
+이 저장소는 LMS 문장 → 결정(ADR) → 테스트 → 코드 순서로 따라 내려갈 수 있습니다. LMS 문장 하나로 그 길을 보여 줍니다.
+
+> "각각의 Component 는 자신만의 **로직**과 **렌더링**을 담당합니다." (LMS L3)
+
+"로직"과 "렌더링"의 뜻을 용어집 [`GLOSSARY.md`](GLOSSARY.md)에 정하고, 그 뜻에서 결정(ADR)을 한 문장씩 썼습니다.
+
+| 단어 | 결정 (ADR) |
+| ---- | ---------- |
+| 렌더링 | [`update()`는 Root Component 본문을 처음부터 다시 실행해 새 View를 만듭니다](docs/adr/render/update-reruns-root-component-and-makes-new-view.md) |
+| Component의 로직 | [`update()`는 Root Component 본문을 다시 실행하면서 클릭 함수도 새로 만들어, 이전 렌더링의 클릭 함수를 모두 바꿉니다](docs/adr/render/update-makes-new-click-functions.md) |
+
+결정이 한 문장이면 무엇을 테스트할지가 정해집니다. 두 결정의 테스트와 코드는 [docs/l3-tests-and-code.md](docs/l3-tests-and-code.md)에 있습니다.
+
 
 ## Architecture
 
-### Phase 1과 Phase 2
+### Project Structure
+```text
+mini-react/
+├── src/
+│   ├── main.ts                진입점. index.html이 불러옴
+│   ├── vnode.ts               VNode 타입, DOM ↔ VNode 변환
+│   ├── diff.ts                diffViews: 두 View 비교 → Patch 목록
+│   ├── patch.ts               applyPatchesToDom: Patch 목록을 DOM에 반영
+│   ├── history.ts             StateHistory: 뒤로가기 / 앞으로가기
+│   ├── function-component.ts  FunctionComponent, useState / useEffect / useMemo
+│   ├── test-pages/            검증 페이지, 데모 페이지
+│   └── *.test.ts              테스트 (소스 옆에 둠)
+├── examples/                 Hello World 등 실행 가능한 사용 예제
+├── docs/
+│   └── adr/                   설계 결정과 이유
+├── index.html                 데모 페이지
+└── GLOSSARY.md                코드와 문서에서 쓰는 용어 정리
+```
 
-|         | 하는 일                                                          | 새 `View`를 만드는 것                              |
-| ------- | ---------------------------------------------------------------- | -------------------------------------------------- |
-| Phase 1 | 두 `View`(Virtual DOM)의 차이를 찾아, 그 차이만 DOM에 반영합니다 | 사람 (검증 페이지의 테스트 영역 HTML과 Patch 버튼) |
-| Phase 2 | State가 바뀌면 새 `View`를 만들어 Phase 1에 넘깁니다             | 클릭이 바꾼 State                                  |
+### Data Flow
 
-`View`는 화면 전체를 설명하는 값이고, 과제 문서가 Virtual DOM이라 부르는 것입니다. 두 Phase는 `View`에서 만납니다. Phase 2의 `update()`는 Phase 1의 `diffViews`와 `applyPatchesToDom`을 그대로 부릅니다.
+`View`는 화면 전체를 설명하는 값이고, LMS가 Virtual DOM이라 부르는 것입니다. 두 Phase는 `View`에서 만납니다. L20 "Phase 2 의 상태가 변경되어 다시 렌더링할 때, Phase 1 에서 만든 Virtual DOM 을 그대로 활용합니다."는 코드에서 `update()`가 `diffViews`와 `applyPatchesToDom`을 그대로 부르는 두 줄입니다.
 
 ![Phase 2의 click, setter, instance, render가 만든 새 View와 Phase 1의 vnode가 만든 새 View가 diff로 모이고, patch가 DOM에 반영한 뒤 effect가 실행되는 그림](docs/images/architecture.png)
 
 상자의 `ADR` 숫자는 그 단계의 결정 수입니다. 그림의 원본은 `docs/images/architecture.html`입니다.
 
-### 단계
+단계 9개의 정의와 ADR 수, L16 "useState" 한 줄이 결정 다섯 개로 퍼지는 표, `VNode`와 `Patch`와 `HookCell`의 타입은 [docs/architecture.md](docs/architecture.md)에 있습니다.
 
-단계는 데이터가 지나가는 구간이고, `docs/adr/`의 폴더 이름과 같습니다. 결정은 그 결정을 지키는 테스트가 부르는 모듈의 단계에 둡니다.
 
-| Phase | 단계 | 하는 일 | ADR |
-| ----- | ---- | ------- | --- |
-| 1 | [`vnode`](docs/adr/vnode/README.md) | DOM과 `VNode`를 서로 바꿉니다 | 14 |
-| 1 | [`diff`](docs/adr/diff/README.md) | 두 `View`를 비교해 `Patch` 목록을 만듭니다 | 8 |
-| 1 | [`patch`](docs/adr/patch/README.md) | `Patch` 목록을 DOM에 적용합니다 | 9 |
-| 1 | [`history`](docs/adr/history/README.md) | 저장한 `View`의 목록과 현재 위치를 가집니다 | 5 |
-| 2 | [`click`](docs/adr/click/README.md) | DOM 클릭을 `actions` 표의 함수 호출로 바꿉니다 | 5 |
-| 2 | [`setter`](docs/adr/setter/README.md) | 함수가 칸을 바꾸고 `update()`를 부릅니다 | 8 |
-| 2 | [`instance`](docs/adr/instance/README.md) | Root Instance가 `mount`와 `update`로 한 번의 흐름을 지휘합니다 | 6 |
-| 2 | [`render`](docs/adr/render/README.md) | 칸을 읽어 Root Component를 실행하고 새 `View`를 만듭니다 | 9 |
-| 2 | [`effect`](docs/adr/effect/README.md) | DOM 반영 직후 effect와 정리 함수를 부릅니다 | 8 |
+## Validation
 
-### Core Data Structures
+![결정과 테스트가 어긋나는 세 경우가 쓰는 규칙, 기계 검사, 새 세션 리뷰, 사람의 설명 네 층을 지나며, 각 층이 무엇이 강제하는지와 무엇을 검사하는지와 앞 층이 놓친 것을 어떻게 잡는지를 보여 주는 그림](docs/images/validation-layers.png)
 
-| 값 | 뜻 | 만드는 단계 → 쓰는 단계 |
-| --- | --- | --- |
-| `VNode` | 화면의 한 부분을 설명하는 값. 맨 위의 `VNode`가 `View`입니다 | `render`, `vnode` → `diff` |
-| `Patch` | DOM에 반영할 지시 하나. `path`는 `View`에서 노드까지 내려가는 `children` 번호의 목록입니다 | `diff` → `patch` |
-| `HookCell` | Hook 호출 하나의 값을 담는 칸. `hooks` 배열에 호출 순서대로 들어 있습니다 | `setter`, `render` → 다음 `render` |
-
-```ts
-type VNode =
-  | string
-  | { type: string; props: Record<string, string>; children: VNode[] };
-
-type Patch =
-  | { type: "TEXT"; path: number[]; text: string }
-  | { type: "REPLACE"; path: number[]; node: VNode }
-  | { type: "PROPS"; path: number[]; set: Record<string, string>; remove: string[] }
-  | { type: "INSERT"; path: number[]; node: VNode }
-  | { type: "REMOVE"; path: number[] };
-
-type HookCell = StateCell | EffectCell | MemoCell;
-```
-
-순위 페이지에서 6위인 사람의 `+`를 한 번 누른 뒤의 값입니다.
-
-```text
-hooks[0]  StateCell   value: { …, p06: 2 }                  1 → 2
-hooks[3]  MemoCell    deps: [scores, track]                 scores가 바뀌어 다시 계산
-hooks[4]  EffectCell  deps: ["p02"]                         1위가 그대로라 건너뜀
-
-patches   { type: "TEXT", path: [0, 1, 5, 3, 0], text: "2" }   동료 평가의 점수
-          { type: "TEXT", path: [1, 3, 5, 2, 0], text: "2" }   순위표의 점수
-```
+그림의 원본은 `docs/images/validation-layers.html`입니다.
 
 
 ## Demo
 
-### Main Demo: 순위 페이지
+### Vanilla와 mini-react: 장보기 목록
 
-[배포된 페이지에서 바로 실행하기](https://benjohnbill.github.io/mini-react/#ranking-section)
+같은 장보기 목록을 두 판으로 나란히 만들었습니다. Vanilla 판은 클릭마다 `innerHTML`로 전부 다시 만들고, mini-react 판은 바뀐 곳만 고칩니다. 판 아래의 숫자는 그 클릭에 새로 만든 요소의 수와 태그별 내역이고, mini-react 판 아래에는 그 클릭의 `Patch` 목록이 나옵니다. 새로 만든 줄은 잠깐 색이 바뀝니다. `npm run dev`를 실행한 뒤 `http://localhost:5173/examples/shopping-list/`에서 볼 수 있습니다.
 
-순위 페이지는 동료 평가의 점수를 누르면 순위가 바뀌는 화면입니다. 오른쪽의 Hook 패널은 클릭마다 그 클릭이 지난 단계, `hooks`의 칸마다 일어난 일, DOM에 적용한 `Patch` 목록을 보여 줍니다. `npm run dev`를 실행한 뒤 `http://localhost:5173/#ranking-section`에서 볼 수 있습니다.
+![장보기 목록의 Vanilla 판과 mini-react 판이 나란히 있는 화면](examples/shopping-list/screenshot.png)
 
-| 클릭 | 지난 단계 | `useMemo` | `useEffect` | `Patch` |
-| ---- | --------- | --------- | ----------- | ------- |
-| 이름 가리기 | `click` ~ `patch` | 건너뜀 | 건너뜀 | `PROPS` 1, `TEXT` 7 |
-| 순위가 그대로인 점수 `+` | `click` ~ `patch` | 다시 계산 | 건너뜀 | `TEXT` 2 |
-| 1위가 바뀌는 점수 `+` | `click` ~ `effect` | 다시 계산 | 실행 | `TEXT` 6 |
-| 5점인 사람의 `+` | `click`, `setter` | | | 없음 |
+| 동작 | Vanilla (`innerHTML`) | mini-react | 테스트 |
+| ---- | --------------------- | ---------- | ------ |
+| "항목 추가"를 누릅니다 | 요소 16개를 새로 만듭니다 (줄 셋과 합계와 버튼 전부) | 요소 4개를 새로 만듭니다 (새 줄 하나) | E7, E8 |
+| 메모를 친 뒤 "항목 추가"를 누릅니다 | 입력란을 새로 만들어 친 메모가 사라집니다 | 같은 입력란이라 친 메모가 남습니다 | E7, E8 |
+| "항목 추가"에 포커스를 두고 누릅니다 | 버튼을 새로 만들어 포커스를 잃습니다 | 같은 버튼이라 포커스가 남습니다 | E7, E8 |
+| 메모를 친 뒤 맨 아래 항목을 "삭제"합니다 | 남은 줄도 새로 만들어 친 메모가 사라집니다 | 맨 아래 줄만 지워 친 메모가 남습니다 | E10 |
+| 첫 줄에 메모를 친 뒤 첫 항목을 "삭제"합니다 | 친 메모가 사라집니다 | 친 메모가 첫 줄에 남아 다음 항목 옆에 보입니다 | E9 |
 
-코드는 `src/test-pages/ranking-page.ts`(Root Component)와 `src/test-pages/hook-panel.ts`(Hook 패널)이고, 위 표의 줄은 `ranking-page.test.ts`의 테스트 K3, K4, K5, K6, K8이 확인합니다.
-
-### Vanilla, mini-react, React의 차이
-
-1위가 바뀌는 클릭 한 번에 순위표의 DOM에 하는 일입니다.
-
-| | DOM에 하는 일 |
-| --- | --- |
-| Vanilla (`innerHTML`) | 순위표의 줄을 모두 새로 만듭니다 |
-| mini-react | 줄은 그대로 두고, 자리가 바뀐 두 줄의 글자를 고칩니다 (`TEXT` 6) |
-| React (`key`) | 글자는 그대로 두고, 줄을 옮깁니다 |
-
-mini-react는 `key`가 없어 같은 번호의 자식끼리 비교합니다([`diff-compares-same-index-children-first`](docs/adr/diff/diff-compares-same-index-children-first.md)). mini-react의 줄은 테스트 K5가 확인합니다. Vanilla와 React의 줄은 이 저장소에서 재지 않았습니다.
-
-## How We Built It (TBD)
+마지막 줄은 mini-react의 한계입니다. `key`가 없어 같은 번호의 자식끼리 비교하므로([`diff-compares-same-index-children-first`](docs/adr/diff/diff-compares-same-index-children-first.md)), 입력란은 항목을 따라가지 않고 자리에 남습니다. React는 `key`로 줄을 옮겨 입력란이 항목을 따라갑니다. React의 동작은 이 저장소에서 재지 않았습니다. 코드와 설명은 [`examples/shopping-list/`](examples/shopping-list/README.md)에 있습니다.
 
 
+## Examples
 
-### 자동 검사
+### Hello World
 
-이 연결은 자동으로 검사합니다.
+Root Component는 화면을 설명하는 `VNode`를 돌려주는 함수입니다. 문자열도 VNode이므로 다음 코드만으로 첫 화면을 그릴 수 있습니다.
 
-| 연결 | 검사 |
-| ---- | ---- |
-| LMS 문장 69개 → 근거 ADR 이름 | `npm run check`가 그 이름의 ADR 파일이 있는지 확인합니다 |
-| ADR 101개 → 테스트 ID | `npm run check`가 인용한 ID(342개)가 테스트에 있는지 확인합니다 |
-| 테스트 → 코드 | `npm test`. CI가 PR마다 실행합니다 |
+[examples/hello-world/main.ts](examples/hello-world/main.ts):
+
+아래 상대 import 경로는 `examples/hello-world/` 기준입니다.
+
+```ts
+import { FunctionComponent } from "../../src/function-component";
+
+const container = document.querySelector("#app");
+if (container === null) {
+  throw new Error("#app 요소가 필요합니다");
+}
+
+new FunctionComponent(() => "Hello World").mount(container);
+```
+
+HTML은 [index.html](examples/hello-world/index.html)에 있습니다. 파일을 고치지 않고 실행할 수 있습니다.
+
+개발 서버를 실행한 뒤 브라우저에서 `http://localhost:5173/examples/hello-world/`를 여세요. 화면에 `Hello World`가 표시됩니다. 포트가 다르면 `5173`을 터미널에 표시된 포트로 바꾸세요.
+
+![Hello World 실행 화면](examples/hello-world/screenshot.png)
+
+### 더 많은 예제
+
+[예제 모음](examples/README.md)에서 mini-react의 주요 기능을 사용하는 더 많은 예제를 확인할 수 있습니다.
+
+Root Component를 쓸 때 지킬 규칙 여섯 개는 [예제 모음의 "Root Component를 쓸 때"](examples/README.md#root-component를-쓸-때)에 있습니다.
 
 ## Environment
 ### Tech Stack
@@ -152,56 +149,6 @@ mini-react는 `key`가 없어 같은 번호의 자식끼리 비교합니다([`di
 | Deploy | GitHub Pages | main에 머지되면 데모 페이지 자동 배포 |
 
 
-### Project Structure
-```text
-mini-react/
-├── src/
-│   ├── main.ts                진입점. index.html이 불러옴
-│   ├── vnode.ts               VNode 타입, DOM ↔ VNode 변환
-│   ├── diff.ts                diffViews: 두 View 비교 → Patch 목록
-│   ├── patch.ts               applyPatchesToDom: Patch 목록을 DOM에 반영
-│   ├── history.ts             StateHistory: 뒤로가기 / 앞으로가기
-│   ├── function-component.ts  FunctionComponent, useState / useEffect / useMemo
-│   ├── test-pages/            검증 페이지, 데모 페이지
-│   └── *.test.ts              테스트 (소스 옆에 둠)
-├── docs/
-│   ├── examples/              Hello World 등 사용 예제
-│   └── adr/                   설계 결정과 이유
-├── index.html                 데모 페이지
-└── GLOSSARY.md                코드와 문서에서 쓰는 용어 정리
-```
-
-
-
-
-## Getting Started
-
-### 설치 및 실행
-Node.js **26**이 필요합니다(`.nvmrc` 기준). 저장소를 내려받고 개발 서버를 실행하세요.
-
-```bash
-git clone https://github.com/benjohnbill/mini-react.git
-cd mini-react
-npm ci             # 도구 설치 (Node 버전: .nvmrc)
-npm run dev        # 개발 서버에서 index.html 실행
-npm test           # 단위 테스트
-```
-
-
-### Hello World
-
-Root Component는 화면을 설명하는 `VNode`를 돌려주는 함수입니다. 문자열도 `VNode`이므로 한 줄로 첫 화면을 그릴 수 있습니다.
-
-```ts
-new FunctionComponent(() => "Hello World").mount(container);
-```
-
-`npm run dev` 실행 후 `http://localhost:5173/examples/hello-world/`에서 확인합니다. 전체 코드: [main.ts](examples/hello-world/main.ts) · [index.html](examples/hello-world/index.html)
-
-![Hello World 실행 화면](examples/hello-world/screenshot.png)
-
-더 많은 예제와 Root Component 작성 규칙은 [예제 모음](examples/README.md)에 있습니다.
-
 ## Team
 
 | GitHub 계정   | 이름 | 브랜치    | 
@@ -212,6 +159,9 @@ new FunctionComponent(() => "Hello World").mount(container);
 
 
 ### 작업 규칙
-- `CONVENTION.md`: 브랜치, PR, 커밋, 병합 규칙. 작업 시작 전에 읽음
-- `AGENTS.md`: 에이전트에게 작업을 맡기기 전에 읽음
-- 마일스톤과 할 일: [팀 보드](https://github.com/users/benjohnbill/projects/7)
+
+- [`AGENTS.md`](AGENTS.md)
+- [`CONVENTION.md`](CONVENTION.md)
+- [`GLOSSARY.md`](GLOSSARY.md)
+- [`docs/adr/`](docs/adr/README.md)
+- [팀 보드](https://github.com/users/benjohnbill/projects/7)
