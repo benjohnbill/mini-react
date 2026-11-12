@@ -86,6 +86,8 @@ mini-react/
 
 ## Demo
 
+![메모를 친 뒤 항목 추가를 눌렀을 때, 전부 다시 만드는 Vanilla는 메모가 사라지고, 손으로 고치는 Vanilla는 합계를 놓치고, View 하나를 돌려주는 mini-react는 바뀐 곳만 고치는 것을 나란히 보여 주는 그림](docs/images/three-ways-to-update.png)
+
 ### Vanilla와 mini-react: 장보기 목록
 
 같은 장보기 목록을 두 판으로 나란히 만들었습니다. Vanilla 판은 클릭마다 `innerHTML`로 전부 다시 만들고, mini-react 판은 바뀐 곳만 고칩니다. 판 아래의 숫자는 그 클릭에 새로 만든 요소의 수와 태그별 내역이고, mini-react 판 아래에는 그 클릭의 `Patch` 목록이 나옵니다. 새로 만든 줄은 잠깐 색이 바뀝니다. `npm run dev`를 실행한 뒤 `http://localhost:5173/examples/shopping-list/`에서 볼 수 있습니다.
