@@ -6,7 +6,7 @@
 
 ## 실행
 
-저장소 루트에서 `npm ci`, `npm run dev`를 실행한 뒤 [예제 열기](http://localhost:5173/examples/shopping-list/)로 이동합니다. 포트가 다르면 터미널에 표시된 주소의 포트로 바꿉니다.
+[예제 열기](https://benjohnbill.github.io/mini-react/examples/shopping-list/)에서 배포된 페이지를 바로 볼 수 있습니다. 로컬에서 실행하려면 저장소 루트에서 `npm ci`, `npm run dev`를 실행한 뒤 [로컬 예제](http://localhost:5173/examples/shopping-list/)로 이동합니다. 포트가 다르면 터미널에 표시된 주소의 포트로 바꿉니다.
 
 ## 확인할 동작
 
