@@ -23,52 +23,12 @@
 - `useState`, `useEffect`, `useMemo`
 - State가 바뀌면 이전 화면과 비교해서 바뀐 부분만 DOM에 반영
 
-**핵심 용어**
-- **View**: 화면 전체를 설명하는 값 (= Virtual DOM)
-- **Patch**: 두 View의 차이를 DOM에 반영하기 위한 지시
-- **Root Component**: State를 가질 수 있는 최상위 함수형 컴포넌트
-- **칸(`HookCell`)**: Hook 호출 하나의 값을 담는 자리. `hooks` 배열에 호출 순서대로 저장
-
 **React와 다른 점**
 - State와 Hook은 최상위 컴포넌트에서만 사용 가능. 자식 컴포넌트는 props만 받음
 - 이벤트는 클릭만 지원
 - `key` 없음. 자식 요소는 같은 순서끼리 비교
 - 여러 번의 setState를 한 번에 묶어 처리하는 Batching 없음
 - 컴포넌트가 화면에서 사라질 때(unmount) 정리하는 기능 없음
-
-
-## Environment
-### Tech Stack
-| 구분 | 도구 | 용도 |
-| --- | --- | --- |
-| Language | TypeScript 7 | `strict`, `noUncheckedIndexedAccess` 켜고 사용 |
-| Runtime | Node.js 26 | 버전은 `.nvmrc` 기준 |
-| Dev Server / Build | Vite 8 | 개발 서버, 데모 페이지 빌드 |
-| Test | Vitest 5 + jsdom | 단위 테스트, 기능 테스트. jsdom으로 브라우저 DOM 환경 재현 |
-| Lint / Format | Biome 2 | 코드 형식 통일, 실수 자동 검사 |
-| CI | GitHub Actions | PR과 main push마다 typecheck → check → test → build 실행 |
-| Deploy | GitHub Pages | main에 머지되면 데모 페이지 자동 배포 |
-
-
-### Project Structure
-```text
-mini-react/
-├── src/
-│   ├── main.ts                진입점. index.html이 불러옴
-│   ├── vnode.ts               VNode 타입, DOM ↔ VNode 변환
-│   ├── diff.ts                diffViews: 두 View 비교 → Patch 목록
-│   ├── patch.ts               applyPatchesToDom: Patch 목록을 DOM에 반영
-│   ├── history.ts             StateHistory: 뒤로가기 / 앞으로가기
-│   ├── function-component.ts  FunctionComponent, useState / useEffect / useMemo
-│   ├── test-pages/            검증 페이지, 데모 페이지
-│   └── *.test.ts              테스트 (소스 옆에 둠)
-├── docs/
-│   ├── examples/              Hello World 등 사용 예제
-│   └── adr/                   설계 결정과 이유
-├── index.html                 데모 페이지
-└── GLOSSARY.md                코드와 문서에서 쓰는 용어 정리
-```
-
 
 ## Architecture
 
@@ -148,9 +108,6 @@ type Patch =
   | { type: "INSERT"; path: number[]; node: VNode }
   | { type: "REMOVE"; path: number[] };
 
-type StateCell = { value: unknown; setter: StateSetter<unknown> };
-type EffectCell = { deps: Deps | undefined; cleanup: Cleanup | undefined; version: number };
-type MemoCell = { deps: Deps | undefined; value: unknown };
 type HookCell = StateCell | EffectCell | MemoCell;
 ```
 
@@ -199,18 +156,42 @@ mini-react는 `key`가 없어 같은 번호의 자식끼리 비교합니다([`di
 
 ## Root Component를 쓸 때
 
-Root Component 본문은 렌더링마다 처음부터 다시 실행됩니다. 그래서 아래 규칙을 지켜야 칸과 화면이 어긋나지 않습니다.
+추가 규칙의 근거 ADR (`docs/adr/` 아래): `render/hook-cells-are-found-by-call-order`, `render/hook-outside-render-throws-error`, `setter/setter-during-render-throws-error`, `render/hook-rule-kept-by-convention`, `team/hook-position-checked-by-lint`, `instance/component-returns-view-and-function-component-draws`.
 
-| 규칙 | 어기면 | 알려 주는 곳 |
-| ---- | ------ | ------------ |
-| Hook은 Root Component 본문 맨 위에서, 매번 같은 순서로 부릅니다 | 뒤쪽 Hook이 앞쪽 칸의 값을 받습니다 | Biome `useHookAtTopLevel` |
-| 클릭 함수 안에서는 Hook을 부르지 않고, 렌더링 때 받은 값과 setter를 씁니다 | `Error` | 실행할 때, Biome |
-| 렌더링 중에는 setter를 부르지 않습니다 | `Error` | 실행할 때 |
-| 자식 Component는 `function create<이름>` 선언으로 쓰고, Hook을 쓰지 않습니다 | 자식을 빼면 뒤쪽 Hook의 칸이 밀립니다 | Biome (`function` 선언일 때), 리뷰 |
-| Root Component는 PascalCase로 짓습니다 (예: `CounterRootComponent`) | Biome이 클릭 함수 안의 Hook을 놓칩니다 | 리뷰 |
-| 본문에서 DOM을 직접 고치지 않습니다 | 다음 Patch가 그 변경을 몰라 화면이 View와 어긋납니다 | 리뷰 |
+## Environment
+### Tech Stack
+| 구분 | 도구 | 용도 |
+| --- | --- | --- |
+| Language | TypeScript 7 | `strict`, `noUncheckedIndexedAccess` 켜고 사용 |
+| Runtime | Node.js 26 | 버전은 `.nvmrc` 기준 |
+| Dev Server / Build | Vite 8 | 개발 서버, 데모 페이지 빌드 |
+| Test | Vitest 5 + jsdom | 단위 테스트, 기능 테스트. jsdom으로 브라우저 DOM 환경 재현 |
+| Lint / Format | Biome 2 | 코드 형식 통일, 실수 자동 검사 |
+| CI | GitHub Actions | PR과 main push마다 typecheck → check → test → build 실행 |
+| Deploy | GitHub Pages | main에 머지되면 데모 페이지 자동 배포 |
 
-근거 ADR (`docs/adr/` 아래): `render/hook-cells-are-found-by-call-order`, `render/hook-outside-render-throws-error`, `setter/setter-during-render-throws-error`, `render/hook-rule-kept-by-convention`, `team/hook-position-checked-by-lint`, `instance/component-returns-view-and-function-component-draws`.
+
+### Project Structure
+```text
+mini-react/
+├── src/
+│   ├── main.ts                진입점. index.html이 불러옴
+│   ├── vnode.ts               VNode 타입, DOM ↔ VNode 변환
+│   ├── diff.ts                diffViews: 두 View 비교 → Patch 목록
+│   ├── patch.ts               applyPatchesToDom: Patch 목록을 DOM에 반영
+│   ├── history.ts             StateHistory: 뒤로가기 / 앞으로가기
+│   ├── function-component.ts  FunctionComponent, useState / useEffect / useMemo
+│   ├── test-pages/            검증 페이지, 데모 페이지
+│   └── *.test.ts              테스트 (소스 옆에 둠)
+├── docs/
+│   ├── examples/              Hello World 등 사용 예제
+│   └── adr/                   설계 결정과 이유
+├── index.html                 데모 페이지
+└── GLOSSARY.md                코드와 문서에서 쓰는 용어 정리
+```
+
+
+
 
 ## Getting Started
 
@@ -222,59 +203,23 @@ git clone https://github.com/benjohnbill/mini-react.git
 cd mini-react
 npm ci             # 도구 설치 (Node 버전: .nvmrc)
 npm run dev        # 개발 서버에서 index.html 실행
-npm run typecheck  # 타입 검사
-npm run check      # 포맷, 린트, ADR이 인용한 테스트 ID 검사 (자동 수정: npm run format)
 npm test           # 단위 테스트
-npm run build      # 빌드
 ```
 
 
 ### Hello World
 
-Root Component는 화면을 설명하는 `VNode`를 돌려주는 함수입니다. 문자열도 VNode이므로 다음 코드만으로 첫 화면을 그릴 수 있습니다.
-
-[docs/examples/hello-world/main.ts](docs/examples/hello-world/main.ts):
-
-아래 상대 import 경로는 `docs/examples/hello-world/` 기준입니다.
+Root Component는 화면을 설명하는 `VNode`를 돌려주는 함수입니다. 문자열도 `VNode`이므로 한 줄로 첫 화면을 그릴 수 있습니다.
 
 ```ts
-import { FunctionComponent } from "../../../src/function-component";
-
-const container = document.querySelector("#app");
-if (container === null) {
-  throw new Error("#app 요소가 필요합니다");
-}
-
 new FunctionComponent(() => "Hello World").mount(container);
 ```
 
-HTML에는 화면을 그릴 요소와 TypeScript 파일을 불러오는 코드가 필요합니다. 위 코드는 이미 저장소에 있으므로 파일을 수정하지 않고 실행할 수 있습니다. 아래는 실행에 필요한 [index.html](docs/examples/hello-world/index.html)입니다.
-
-```html
-<!doctype html>
-<html lang="ko">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Hello World | mini-react</title>
-    <link rel="stylesheet" href="../examples.css" />
-  </head>
-  <body>
-    <main>
-      <div id="app"></div>
-    </main>
-    <script type="module" src="./main.ts"></script>
-  </body>
-</html>
-```
-
-개발 서버를 실행한 뒤 브라우저에서 `http://localhost:5173/docs/examples/hello-world/`를 여세요. 화면에 `Hello World`가 표시됩니다. 포트가 다르면 `5173`을 터미널에 표시된 포트로 바꾸세요.
+`npm run dev` 실행 후 `http://localhost:5173/docs/examples/hello-world/`에서 확인합니다. 전체 코드: [main.ts](docs/examples/hello-world/main.ts) · [index.html](docs/examples/hello-world/index.html)
 
 ![Hello World 실행 화면](docs/examples/hello-world/screenshot.png)
 
-### 더 많은 예제
-
-[예제 모음](docs/examples/README.md)에서 mini-react의 주요 기능을 사용하는 더 많은 예제를 확인할 수 있습니다.
+더 많은 예제와 Root Component 작성 규칙은 [예제 모음](docs/examples/README.md)에 있습니다.
 
 ## Team
 
