@@ -9,10 +9,13 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-7-3178C6?logo=typescript&logoColor=white)
 ![Runtime deps](https://img.shields.io/badge/runtime%20deps-0-brightgreen)
 
-[Overview](#overview) · [Environment](#environment) · [Architecture](#architecture) · [Demo](#demo) · [Getting Started](#getting-started) · [Team](#team)
+[Overview](#overview) · [Architecture](#architecture) · [Validation](#validation) · [Demo](#demo) · [Getting Started](#getting-started) · [Environment](#environment) · [Team](#team)
 
 
 ## Overview
+
+mini-react는 Virtual DOM, Diff, Patch, Hooks를 바닐라 TypeScript로 구현하고, LMS 요구사항 문장마다 결정(ADR)과 테스트를 이어 그 연결을 `npm run check`로 검사하는 저장소입니다.
+
 **mini-react란?**
 - React 없이 Virtual DOM, Diff, Patch, Hooks를 바닐라 TypeScript로 직접 구현한 프로젝트
 - React의 핵심 흐름만 남긴 간소화 버전
@@ -37,42 +40,9 @@
 - 컴포넌트가 화면에서 사라질 때(unmount) 정리하는 기능 없음
 
 
-## Environment
-### Tech Stack
-| 구분 | 도구 | 용도 |
-| --- | --- | --- |
-| Language | TypeScript 7 | `strict`, `noUncheckedIndexedAccess` 켜고 사용 |
-| Runtime | Node.js 26 | 버전은 `.nvmrc` 기준 |
-| Dev Server / Build | Vite 8 | 개발 서버, 데모 페이지 빌드 |
-| Test | Vitest 5 + jsdom | 단위 테스트, 기능 테스트. jsdom으로 브라우저 DOM 환경 재현 |
-| Lint / Format | Biome 2 | 코드 형식 통일, 실수 자동 검사 |
-| CI | GitHub Actions | PR과 main push마다 typecheck → check → test → build 실행 |
-| Deploy | GitHub Pages | main에 머지되면 데모 페이지 자동 배포 |
-
-
-### Project Structure
-```text
-mini-react/
-├── src/
-│   ├── main.ts                진입점. index.html이 불러옴
-│   ├── vnode.ts               VNode 타입, DOM ↔ VNode 변환
-│   ├── diff.ts                diffViews: 두 View 비교 → Patch 목록
-│   ├── patch.ts               applyPatchesToDom: Patch 목록을 DOM에 반영
-│   ├── history.ts             StateHistory: 뒤로가기 / 앞으로가기
-│   ├── function-component.ts  FunctionComponent, useState / useEffect / useMemo
-│   ├── test-pages/            검증 페이지, 데모 페이지
-│   └── *.test.ts              테스트 (소스 옆에 둠)
-├── docs/
-│   ├── examples/              Hello World 등 사용 예제
-│   └── adr/                   설계 결정과 이유
-├── index.html                 데모 페이지
-└── GLOSSARY.md                코드와 문서에서 쓰는 용어 정리
-```
-
-
 ## Architecture
 
-이 저장소는 LMS 문장 → 결정(ADR) → 테스트 → 코드 순서로 따라 내려갈 수 있습니다. 이 절은 그 길을 Phase, 단계, 문장 하나의 순서로 보여 줍니다.
+이 저장소는 LMS 문장 → 결정(ADR) → 테스트 → 코드 순서로 따라 내려갈 수 있습니다. 이 절은 그 길을 Phase와 문장 하나의 순서로 보여 줍니다.
 
 ### Phase 1과 Phase 2
 
@@ -86,25 +56,6 @@ mini-react/
 ![Phase 2의 click, setter, instance, render가 만든 새 View와 Phase 1의 vnode가 만든 새 View가 diff로 모이고, patch가 DOM에 반영한 뒤 effect가 실행되는 그림](docs/images/architecture.png)
 
 상자의 `ADR` 숫자는 그 단계의 결정 수입니다. 그림의 원본은 `docs/images/architecture.html`입니다.
-
-### 단계
-
-단계는 데이터가 지나가는 구간이고, `docs/adr/`의 폴더 이름과 같습니다. 결정은 그 결정을 지키는 테스트가 부르는 모듈의 단계에 둡니다.
-
-| Phase | 단계 | 하는 일 | 대표 LMS 문장 | 닿는 LMS 문장 | ADR |
-| ----- | ---- | ------- | ------------- | ------------- | --- |
-| 1 | [`vnode`](docs/adr/vnode/README.md) | DOM과 `VNode`를 서로 바꿉니다 | S4 "브라우저의 DOM 정보를 읽어서 Virtual DOM 으로 변환하는 함수를 작성합니다." | 3 | 14 |
-| 1 | [`diff`](docs/adr/diff/README.md) | 두 `View`를 비교해 `Patch` 목록을 만듭니다 | S5 "두 Virtual DOM 을 비교하여 변경된 부분을 찾아내는 Diff 알고리즘을 작성합니다." | 3 | 8 |
-| 1 | [`patch`](docs/adr/patch/README.md) | `Patch` 목록을 DOM에 적용합니다 | S31 "Diff 알고리즘: 실제 DOM 에 반영 방법" | 9 | 9 |
-| 1 | [`history`](docs/adr/history/README.md) | 저장한 `View`의 목록과 현재 위치를 가집니다 | S16 "새로 변경된 Virtual DOM 은 State History 에 저장합니다." | 2 | 5 |
-| 2 | [`click`](docs/adr/click/README.md) | DOM 클릭을 `actions` 표의 함수 호출로 바꿉니다 | L26 "반드시 사용자의 입력/클릭 등에 따라 화면이 변경되어야 합니다." | 4 | 5 |
-| 2 | [`setter`](docs/adr/setter/README.md) | 함수가 칸을 바꾸고 `update()`를 부릅니다 | L14 "State 가 바뀌면 → 화면이 자동으로 다시 그려져야 합니다." | 9 | 8 |
-| 2 | [`instance`](docs/adr/instance/README.md) | Root Instance가 `mount`와 `update`로 한 번의 흐름을 지휘합니다 | L8 "update(): 상태 변경 후 다시 렌더링" | 10 | 6 |
-| 2 | [`render`](docs/adr/render/README.md) | 칸을 읽어 Root Component를 실행하고 새 `View`를 만듭니다 | L6 "hooks 배열 (상태 저장용)" | 16 | 9 |
-| 2 | [`effect`](docs/adr/effect/README.md) | DOM 반영 직후 effect와 정리 함수를 부릅니다 | L17 "최소 구현 대상: useEffect" | 4 | 8 |
-
-- **닿는 LMS 문장:** 요구사항 표([Phase 1](docs/requirements/phase-1.md), [Phase 2](docs/requirements/phase-2.md))에서 그 단계의 ADR을 근거로 적은 문장의 수입니다.
-- **ADR:** 대체된 ADR 2개를 뺀 수입니다. 흐름 밖의 폴더는 `verification-page` 16, `demo-page` 2, `team` 11입니다.
 
 ### LMS 문장 하나가 코드까지 내려가는 길
 
@@ -120,7 +71,12 @@ LMS L16은 "최소 구현 대상: useState" 한 줄입니다. 이 한 줄을 구
 
 코드는 `src/function-component.ts`의 `useState`와 `createStateCell`입니다. 네 번째 결정은 [Demo](#demo)의 순위 페이지에서 5점인 사람의 `+`를 누르면 볼 수 있습니다.
 
-이 연결은 자동으로 검사합니다.
+단계 9개의 정의와 ADR 수, `VNode`와 `Patch`와 `HookCell`의 타입은 [docs/architecture.md](docs/architecture.md)에 있습니다.
+
+
+## Validation
+
+LMS 문장 → ADR → 테스트 → 코드의 연결은 자동으로 검사합니다.
 
 | 연결 | 검사 |
 | ---- | ---- |
@@ -128,42 +84,26 @@ LMS L16은 "최소 구현 대상: useState" 한 줄입니다. 이 한 줄을 구
 | ADR 101개 → 테스트 ID | `npm run check`가 인용한 ID(342개)가 테스트에 있는지 확인합니다 |
 | 테스트 → 코드 | `npm test`. CI가 PR마다 실행합니다 |
 
-### Core Data Structures
-
-| 값 | 뜻 | 만드는 단계 → 쓰는 단계 |
-| --- | --- | --- |
-| `VNode` | 화면의 한 부분을 설명하는 값. 맨 위의 `VNode`가 `View`입니다 | `render`, `vnode` → `diff` |
-| `Patch` | DOM에 반영할 지시 하나. `path`는 `View`에서 노드까지 내려가는 `children` 번호의 목록입니다 | `diff` → `patch` |
-| `HookCell` | Hook 호출 하나의 값을 담는 칸. `hooks` 배열에 호출 순서대로 들어 있습니다 | `setter`, `render` → 다음 `render` |
-
-```ts
-type VNode =
-  | string
-  | { type: string; props: Record<string, string>; children: VNode[] };
-
-type Patch =
-  | { type: "TEXT"; path: number[]; text: string }
-  | { type: "REPLACE"; path: number[]; node: VNode }
-  | { type: "PROPS"; path: number[]; set: Record<string, string>; remove: string[] }
-  | { type: "INSERT"; path: number[]; node: VNode }
-  | { type: "REMOVE"; path: number[] };
-
-type StateCell = { value: unknown; setter: StateSetter<unknown> };
-type EffectCell = { deps: Deps | undefined; cleanup: Cleanup | undefined; version: number };
-type MemoCell = { deps: Deps | undefined; value: unknown };
-type HookCell = StateCell | EffectCell | MemoCell;
-```
-
-순위 페이지에서 6위인 사람의 `+`를 한 번 누른 뒤의 값입니다.
+ADR이 인용한 테스트 ID 하나를 테스트에 없는 ID로 바꾸면 `npm run check`가 실패합니다.
 
 ```text
-hooks[0]  StateCell   value: { …, p06: 2 }                  1 → 2
-hooks[3]  MemoCell    deps: [scores, track]                 scores가 바뀌어 다시 계산
-hooks[4]  EffectCell  deps: ["p02"]                         1위가 그대로라 건너뜀
-
-patches   { type: "TEXT", path: [0, 1, 5, 3, 0], text: "2" }   동료 평가의 점수
-          { type: "TEXT", path: [1, 3, 5, 2, 0], text: "2" }   순위표의 점수
+[실패] docs/adr/setter/setter-updates-without-batching.md: 테스트에 없는 ID를 인용했습니다: F9999
 ```
+
+### 결정과 테스트를 잇는 네 층
+
+자동 검사는 ID가 있는지만 봅니다. 결정과 테스트의 뜻이 맞는지는 모릅니다. 그래서 놓치는 곳이 서로 다른 네 층을 겹칩니다(Swiss cheese model).
+
+![결정과 테스트가 어긋나는 세 경우가 쓰는 규칙, 기계 검사, 새 세션 리뷰, 사람의 설명 네 층을 지나며 서로 다른 층에서 잡히는 그림](docs/images/validation-layers.png)
+
+| 층 | 있는 곳 |
+| --- | --- |
+| 쓰는 규칙 | `CONVENTION.md`의 "결정과 테스트 잇기", "ADR 쓰기" |
+| 기계 검사 | `scripts/check-decision-links.mjs`. `npm run check`와 CI가 부릅니다 |
+| 새 세션 리뷰 | `CONVENTION.md`의 "에이전트". 결과는 PR 본문의 `새 세션 리뷰`에 적습니다 (예: 커밋 `08bbe4a`가 리뷰를 반영해 ADR의 인용을 바로잡았습니다) |
+| 사람의 설명 | `CONVENTION.md` 6번. 병합된 코드는 원리를 말로 설명할 수 있어야 합니다 |
+
+그림의 원본은 `docs/images/validation-layers.html`입니다.
 
 
 ## Demo
@@ -196,21 +136,6 @@ patches   { type: "TEXT", path: [0, 1, 5, 3, 0], text: "2" }   동료 평가의 
 | React (`key`) | 글자는 그대로 두고, 줄을 옮깁니다 |
 
 mini-react는 `key`가 없어 같은 번호의 자식끼리 비교합니다([`diff-compares-same-index-children-first`](docs/adr/diff/diff-compares-same-index-children-first.md)). mini-react의 줄은 테스트 K5가 확인합니다. Vanilla와 React의 줄은 이 저장소에서 재지 않았습니다.
-
-## Root Component를 쓸 때
-
-Root Component 본문은 렌더링마다 처음부터 다시 실행됩니다. 그래서 아래 규칙을 지켜야 칸과 화면이 어긋나지 않습니다.
-
-| 규칙 | 어기면 | 알려 주는 곳 |
-| ---- | ------ | ------------ |
-| Hook은 Root Component 본문 맨 위에서, 매번 같은 순서로 부릅니다 | 뒤쪽 Hook이 앞쪽 칸의 값을 받습니다 | Biome `useHookAtTopLevel` |
-| 클릭 함수 안에서는 Hook을 부르지 않고, 렌더링 때 받은 값과 setter를 씁니다 | `Error` | 실행할 때, Biome |
-| 렌더링 중에는 setter를 부르지 않습니다 | `Error` | 실행할 때 |
-| 자식 Component는 `function create<이름>` 선언으로 쓰고, Hook을 쓰지 않습니다 | 자식을 빼면 뒤쪽 Hook의 칸이 밀립니다 | Biome (`function` 선언일 때), 리뷰 |
-| Root Component는 PascalCase로 짓습니다 (예: `CounterRootComponent`) | Biome이 클릭 함수 안의 Hook을 놓칩니다 | 리뷰 |
-| 본문에서 DOM을 직접 고치지 않습니다 | 다음 Patch가 그 변경을 몰라 화면이 View와 어긋납니다 | 리뷰 |
-
-근거 ADR (`docs/adr/` 아래): `render/hook-cells-are-found-by-call-order`, `render/hook-outside-render-throws-error`, `setter/setter-during-render-throws-error`, `render/hook-rule-kept-by-convention`, `team/hook-position-checked-by-lint`, `instance/component-returns-view-and-function-component-draws`.
 
 ## Getting Started
 
@@ -248,25 +173,7 @@ if (container === null) {
 new FunctionComponent(() => "Hello World").mount(container);
 ```
 
-HTML에는 화면을 그릴 요소와 TypeScript 파일을 불러오는 코드가 필요합니다. 위 코드는 이미 저장소에 있으므로 파일을 수정하지 않고 실행할 수 있습니다. 아래는 실행에 필요한 [index.html](docs/examples/hello-world/index.html)입니다.
-
-```html
-<!doctype html>
-<html lang="ko">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Hello World | mini-react</title>
-    <link rel="stylesheet" href="../examples.css" />
-  </head>
-  <body>
-    <main>
-      <div id="app"></div>
-    </main>
-    <script type="module" src="./main.ts"></script>
-  </body>
-</html>
-```
+HTML은 [index.html](docs/examples/hello-world/index.html)에 있습니다. 파일을 고치지 않고 실행할 수 있습니다.
 
 개발 서버를 실행한 뒤 브라우저에서 `http://localhost:5173/docs/examples/hello-world/`를 여세요. 화면에 `Hello World`가 표시됩니다. 포트가 다르면 `5173`을 터미널에 표시된 포트로 바꾸세요.
 
@@ -275,6 +182,41 @@ HTML에는 화면을 그릴 요소와 TypeScript 파일을 불러오는 코드�
 ### 더 많은 예제
 
 [예제 모음](docs/examples/README.md)에서 mini-react의 주요 기능을 사용하는 더 많은 예제를 확인할 수 있습니다.
+
+Root Component를 쓸 때 지킬 규칙 여섯 개는 [docs/root-component-rules.md](docs/root-component-rules.md)에 있습니다.
+
+## Environment
+### Tech Stack
+| 구분 | 도구 | 용도 |
+| --- | --- | --- |
+| Language | TypeScript 7 | `strict`, `noUncheckedIndexedAccess` 켜고 사용 |
+| Runtime | Node.js 26 | 버전은 `.nvmrc` 기준 |
+| Dev Server / Build | Vite 8 | 개발 서버, 데모 페이지 빌드 |
+| Test | Vitest 5 + jsdom | 단위 테스트, 기능 테스트. jsdom으로 브라우저 DOM 환경 재현 |
+| Lint / Format | Biome 2 | 코드 형식 통일, 실수 자동 검사 |
+| CI | GitHub Actions | PR과 main push마다 typecheck → check → test → build 실행 |
+| Deploy | GitHub Pages | main에 머지되면 데모 페이지 자동 배포 |
+
+
+### Project Structure
+```text
+mini-react/
+├── src/
+│   ├── main.ts                진입점. index.html이 불러옴
+│   ├── vnode.ts               VNode 타입, DOM ↔ VNode 변환
+│   ├── diff.ts                diffViews: 두 View 비교 → Patch 목록
+│   ├── patch.ts               applyPatchesToDom: Patch 목록을 DOM에 반영
+│   ├── history.ts             StateHistory: 뒤로가기 / 앞으로가기
+│   ├── function-component.ts  FunctionComponent, useState / useEffect / useMemo
+│   ├── test-pages/            검증 페이지, 데모 페이지
+│   └── *.test.ts              테스트 (소스 옆에 둠)
+├── docs/
+│   ├── examples/              Hello World 등 사용 예제
+│   └── adr/                   설계 결정과 이유
+├── index.html                 데모 페이지
+└── GLOSSARY.md                코드와 문서에서 쓰는 용어 정리
+```
+
 
 ## Team
 

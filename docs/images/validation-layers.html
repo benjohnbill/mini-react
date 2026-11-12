@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>mini-react Validation</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Noto+Sans+KR:wght@400;500;600&family=Noto+Serif+KR:wght@400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Geist', 'Noto Sans KR', system-ui, sans-serif;
+      background: #f5f5f5;
+      color: #2d3142;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2rem;
+      word-break: keep-all;
+      overflow-wrap: break-word;
+    }
+    .frame { max-width: 1200px; width: 100%; }
+    .diagram-container { width: 100%; overflow-x: auto; }
+    .eyebrow { font-family: 'Geist Mono', monospace; font-size: 0.66rem; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: #4f5d75; margin-bottom: 0.5rem; }
+    h1 { font-family: 'Instrument Serif', 'Noto Serif KR', serif; font-size: 2rem; font-weight: 400; letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 1.5rem; }
+    svg { width: 100%; min-width: 800px; display: block; }
+    @media print {
+      .diagram-container { overflow-x: visible; }
+      svg { min-width: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Validation · mini-react</p>
+    <h1>결정과 테스트를 잇는 네 층</h1>
+    <div class="diagram-container">
+      <svg viewBox="0 0 800 584" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="validation-layers-title validation-layers-desc">
+        <title id="validation-layers-title">결정(ADR)과 테스트를 잇는 네 층</title>
+        <desc id="validation-layers-desc">결정과 테스트가 어긋나는 세 경우가 쓰는 규칙, 기계 검사, 새 세션 리뷰, 사람의 설명 네 층을 차례로 지나며, 인용한 테스트를 지운 경우는 기계 검사가, 기대값을 반대로 바꾼 경우는 새 세션 리뷰가, 결정을 적지 않은 경우는 사람의 설명이 잡는 그림.</desc>
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+          <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#bf4520"/></marker>
+        </defs>
+
+        <rect width="100%" height="100%" fill="#f5f5f5"/>
+
+        <!-- Risk input: three cases -->
+        <text x="40" y="36" fill="#5a6580" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.08em">RISK</text>
+        <text x="40" y="56" fill="#2d3142" font-size="14" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif">결정과 테스트가 어긋난 채 main에 들어갑니다</text>
+        <text x="500" y="36" fill="#2d3142" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="middle">인용한 테스트를</text>
+        <text x="500" y="52" fill="#2d3142" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="middle">지움</text>
+        <text x="604" y="36" fill="#2d3142" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="middle">기대값을 반대로</text>
+        <text x="604" y="52" fill="#2d3142" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="middle">바꿈</text>
+        <text x="708" y="36" fill="#2d3142" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="middle">결정을 어디에도</text>
+        <text x="708" y="52" fill="#2d3142" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="middle">적지 않음</text>
+
+        <!-- Risk threads (each ends at the layer that catches it; gaps in a layer are its holes) -->
+        <line x1="500" y1="64" x2="500" y2="188" stroke="#bf4520" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+        <line x1="604" y1="64" x2="604" y2="292" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <line x1="708" y1="64" x2="708" y2="396" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+        <!-- Layer 1: 쓰는 규칙 (holes at all three threads) -->
+        <rect x="24" y="84" width="462" height="84" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <rect x="514" y="84" width="76" height="84" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <rect x="618" y="84" width="76" height="84" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <rect x="722" y="84" width="54" height="84" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <rect x="40" y="96" width="52" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+        <text x="66" y="105" fill="#5a6580" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">LAYER 1</text>
+        <text x="104" y="107" fill="#2d3142" font-size="14" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif">쓰는 규칙</text>
+        <text x="470" y="106" fill="#4f5d75" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">CONVENTION.md</text>
+        <text x="40" y="132" fill="#2d3142" font-size="12" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif">ADR에 테스트 ID를 적고, 테스트 이름을 ID로 시작합니다</text>
+        <text x="40" y="152" fill="#5a6580" font-size="12" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif">남는 구멍 · 규칙을 잊습니다</text>
+
+        <!-- Layer 2: 기계 검사 (focal; catches thread 1) -->
+        <rect x="24" y="188" width="566" height="84" rx="6" fill="#ffffff" stroke="#bf4520" stroke-width="1.4"/>
+        <rect x="618" y="188" width="76" height="84" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <rect x="722" y="188" width="54" height="84" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <rect x="40" y="200" width="52" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+        <text x="66" y="209" fill="#5a6580" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">LAYER 2</text>
+        <text x="104" y="211" fill="#2d3142" font-size="14" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif">기계 검사</text>
+        <text x="470" y="210" fill="#4f5d75" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">npm run check · CI</text>
+        <text x="40" y="236" fill="#2d3142" font-size="12" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif">ADR이 인용한 ID가 테스트에 있는지 확인합니다</text>
+        <text x="40" y="256" fill="#5a6580" font-size="12" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif">남는 구멍 · 뜻이 맞는지는 모릅니다</text>
+        <text x="500" y="234" fill="#bf4520" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="middle">잡음</text>
+
+        <!-- Layer 3: 새 세션 리뷰 (catches thread 2) -->
+        <rect x="24" y="292" width="670" height="84" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <rect x="722" y="292" width="54" height="84" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <rect x="40" y="304" width="52" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+        <text x="66" y="313" fill="#5a6580" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">LAYER 3</text>
+        <text x="104" y="315" fill="#2d3142" font-size="14" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif">새 세션 리뷰</text>
+        <text x="470" y="315" fill="#4f5d75" font-size="12" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="end">PR 전 · 코드를 쓰지 않은 세션</text>
+        <text x="40" y="340" fill="#2d3142" font-size="12" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif">ADR 문장과 테스트의 기대값이 같은 뜻인지 봅니다</text>
+        <text x="40" y="360" fill="#5a6580" font-size="12" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif">남는 구멍 · 리뷰하는 쪽의 주의력에 달렸습니다</text>
+        <text x="604" y="338" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="middle">잡음</text>
+
+        <!-- Layer 4: 사람의 설명 (catches thread 3) -->
+        <rect x="24" y="396" width="752" height="84" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <rect x="40" y="408" width="52" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+        <text x="66" y="417" fill="#5a6580" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">LAYER 4</text>
+        <text x="104" y="419" fill="#2d3142" font-size="14" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif">사람의 설명</text>
+        <text x="470" y="419" fill="#4f5d75" font-size="12" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="end">공부와 발표</text>
+        <text x="40" y="444" fill="#2d3142" font-size="12" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif">결정을 말로 설명하다 막히는 곳을 찾습니다</text>
+        <text x="40" y="464" fill="#5a6580" font-size="12" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif">남는 구멍 · 느리고 띄엄띄엄 합니다</text>
+        <text x="708" y="442" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="middle">잡음</text>
+
+        <!-- Final residual -->
+        <text x="40" y="516" fill="#2d3142" font-size="20" font-style="italic" font-family="'Instrument Serif', 'Noto Serif KR', serif">층마다 구멍이 다른 곳에 있어서, 네 층을 모두 빠져나간 어긋남만 남습니다</text>
+
+        <!-- Legend strip -->
+        <line x1="24" y1="536" x2="776" y2="536" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+        <line x1="24" y1="560" x2="52" y2="560" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <text x="60" y="564" fill="#4f5d75" font-size="12" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif">어긋남이 지나가는 길. 화살표 끝이 잡는 층</text>
+        <rect x="336" y="552" width="20" height="16" rx="3" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <rect x="368" y="552" width="20" height="16" rx="3" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <text x="396" y="564" fill="#4f5d75" font-size="12" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif">층의 틈 = 그 층이 놓치는 구멍</text>
+        <rect x="600" y="552" width="28" height="16" rx="3" fill="#ffffff" stroke="#bf4520" stroke-width="1.4"/>
+        <text x="636" y="564" fill="#4f5d75" font-size="12" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif">자동으로 도는 층</text>
+      </svg>
+    </div>
+  </div>
+</body>
+</html>
