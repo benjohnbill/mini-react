@@ -35,14 +35,14 @@ npm run build      # 빌드
 
 > "각각의 Component 는 자신만의 **로직**과 **렌더링**을 담당합니다." (LMS L3)
 
-"로직"과 "렌더링"의 뜻을 용어집 [`GLOSSARY.md`](GLOSSARY.md)에 정하고, 그 뜻에서 결정(ADR)을 한 문장씩 썼습니다.
+"로직"과 "렌더링"의 뜻은 용어집 [`GLOSSARY.md`](GLOSSARY.md)에 있고, 두 단어에 답하는 결정(ADR)은 한 문장씩입니다.
 
 | 단어 | 결정 (ADR) |
 | ---- | ---------- |
 | 렌더링 | [Component는 View를 돌려주기까지만 하고, DOM에 그리는 일은 `FunctionComponent`의 `mount()`와 `update()`가 합니다](docs/adr/instance/component-returns-view-and-function-component-draws.md) |
 | Component의 로직 | [Root Component만 `FunctionComponent`로 감싸고, 자식 Component는 props를 받아 `VNode`를 돌려주는 함수로 둡니다](docs/adr/render/root-only-function-component.md) |
 
-LMS는 "각각의 Component"라고 하지만, 로직은 Root Component만 가지도록 범위를 정했습니다.
+LMS L10 "State 는 최상위 컴포넌트에서만 관리합니다"에 따라, 로직은 Root Component만 가집니다.
 
 결정이 한 문장이면 무엇을 테스트할지가 정해집니다. 두 결정의 테스트와 코드는 [docs/l3-tests-and-code.md](docs/l3-tests-and-code.md)에 있습니다.
 

@@ -72,17 +72,17 @@ applyPatchesToDom(this.container, patches);
 
 > [Root Component만 `FunctionComponent`로 감싸고, 자식 Component는 props를 받아 `VNode`를 돌려주는 함수로 둡니다](adr/render/root-only-function-component.md)
 
-LMS는 "각각의 Component"라고 하지만, 로직(State와 클릭 함수)은 Root Component만 가지도록 범위를 정했습니다.
+LMS L10 "State 는 최상위 컴포넌트에서만 관리합니다"에 따라, 로직(State와 클릭 함수)은 Root Component만 가집니다.
 
-### 이 결정을 지키는 테스트
+### 이 결정과 닿는 테스트
 
 | 테스트 | 확인하는 것 | ADR의 줄 |
 | ------ | ----------- | -------- |
-| F67 | 자식 Component가 props로 받은 글자를 그리고 렌더링마다 한 번씩 불린다 | 결정 |
-| F68 | 같은 자식을 다른 props로 두 번 부르면 상태가 바뀐 뒤에도 두 출력이 섞이지 않는다 | 결정 |
+| F67 | 자식 Component가 props로 받은 글자를 그리고 렌더링마다 한 번씩 불린다 | 인용하지 않음 |
+| F68 | 같은 자식을 다른 props로 두 번 부르면 상태가 바뀐 뒤에도 두 출력이 섞이지 않는다 | 인용하지 않음 |
 | F70 | 한계: 자식 Component의 `useState`는 `Error` 없이 Root Instance의 칸을 써서, 자식을 빼면 Root Component가 자식의 값을 받는다 | CAUTION |
 
-F70은 자식이 이 약속을 어기고 `useState`를 부르면 생기는 일을 보여 줍니다. 자식을 빼자 Root Component의 `name`이 자식의 값 `child`를 받습니다.
+F67과 F68은 자식이 props만으로 그리는 모습을 보여 주지만, 결정을 어겨도 실패하지 않아서 ADR이 인용하지 않습니다. F70은 자식이 이 약속을 어기고 `useState`를 부르면 생기는 일을 보여 줍니다. 자식을 빼자 Root Component의 `name`이 자식의 값 `child`를 받습니다.
 
 ```ts
 // src/function-component.test.ts
