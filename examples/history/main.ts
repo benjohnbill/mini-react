@@ -1,7 +1,7 @@
-import { diffViews } from "../../../src/diff";
-import { StateHistory } from "../../../src/history";
-import { applyPatchesToDom } from "../../../src/patch";
-import { createVNodeFromDom, type VNode } from "../../../src/vnode";
+import { diffViews } from "../../src/diff";
+import { StateHistory } from "../../src/history";
+import { applyPatchesToDom } from "../../src/patch";
+import { createVNodeFromDom, type VNode } from "../../src/vnode";
 
 const app = document.querySelector("#app");
 if (app === null) throw new Error("#app 요소가 필요합니다");

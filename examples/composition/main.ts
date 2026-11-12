@@ -2,8 +2,8 @@ import {
   FunctionComponent,
   type RootComponent,
   useState,
-} from "../../../src/function-component";
-import type { VNode } from "../../../src/vnode";
+} from "../../src/function-component";
+import type { VNode } from "../../src/vnode";
 
 function createCountLine({ count }: { count: number }): VNode {
   return { type: "p", props: { role: "status" }, children: [`숫자: ${count}`] };

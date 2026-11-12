@@ -1,4 +1,4 @@
-import { FunctionComponent } from "../../../src/function-component";
+import { FunctionComponent } from "../../src/function-component";
 
 const container = document.querySelector("#app");
 if (container === null) {

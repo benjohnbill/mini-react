@@ -6,7 +6,7 @@ effect로 페이지의 배경을 바꿉니다.
 
 ## 실행
 
-저장소 루트에서 `npm ci`, `npm run dev`를 실행한 뒤 [예제 열기](http://localhost:5173/docs/examples/theme/)로 이동합니다. 포트가 다르면 터미널에 표시된 주소의 포트로 바꿉니다.
+저장소 루트에서 `npm ci`, `npm run dev`를 실행한 뒤 [예제 열기](http://localhost:5173/examples/theme/)로 이동합니다. 포트가 다르면 터미널에 표시된 주소의 포트로 바꿉니다.
 
 ## 확인할 동작
 
