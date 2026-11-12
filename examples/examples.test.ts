@@ -159,6 +159,9 @@ it("E7 장보기 목록의 Vanilla 판은 항목 추가를 누르면 입력란�
   expect(document.querySelector("#vanilla-created")?.textContent).toBe(
     "방금 새로 만든 요소: 16개",
   );
+  expect(document.querySelector("#vanilla-created-detail")?.textContent).toBe(
+    "ul 1, li 3, span 3, button 4, input 3, p 2",
+  );
 });
 
 it("E8 장보기 목록의 mini-react 판은 항목 추가를 눌러도 같은 입력란과 같은 버튼이라, 친 메모와 버튼의 포커스가 남습니다", async () => {
@@ -179,6 +182,12 @@ it("E8 장보기 목록의 mini-react 판은 항목 추가를 눌러도 같은 �
   expect(document.querySelector("#mini-react-created")?.textContent).toBe(
     "방금 새로 만든 요소: 4개",
   );
+  expect(
+    document.querySelector("#mini-react-created-detail")?.textContent,
+  ).toBe("li 1, span 1, button 1, input 1");
+  expect(document.querySelector("#mini-react-patches")?.textContent).toBe(
+    'INSERT [0, 2] <li>\nTEXT [1, 0] "합계: 6000원"',
+  );
 });
 
 it("E9 한계 — 장보기 목록의 mini-react 판에서 첫 항목을 삭제하면, 친 메모가 지운 항목과 함께 사라지지 않고 첫 줄에 남습니다", async () => {
@@ -193,6 +202,30 @@ it("E9 한계 — 장보기 목록의 mini-react 판에서 첫 항목을 삭제�
   expect(getMemoInput("#mini-react", 0)).toBe(memo);
   expect(getMemoInput("#mini-react", 0).value).toBe("저지방");
   await Promise.resolve();
+  expect(document.querySelector("#mini-react-created")?.textContent).toBe(
+    "방금 새로 만든 요소: 0개",
+  );
+});
+
+it("E10 장보기 목록에서 맨 아래 항목을 삭제하면, Vanilla 판은 남은 줄도 새로 만들어 친 메모가 사라지고 mini-react 판은 그 줄만 지워 친 메모가 남습니다", async () => {
+  await startShoppingList();
+  getMemoInput("#vanilla", 0).value = "저지방";
+  const memo = getMemoInput("#mini-react", 0);
+  memo.value = "저지방";
+  clickButton('#vanilla [data-action="delete"][data-index="1"]');
+  clickButton('#mini-react [data-action="delete-1"]');
+  expect(document.querySelectorAll("#vanilla li")).toHaveLength(1);
+  expect(getMemoInput("#vanilla", 0).value).toBe("");
+  expect(document.querySelectorAll("#mini-react li")).toHaveLength(1);
+  expect(getMemoInput("#mini-react", 0)).toBe(memo);
+  expect(getMemoInput("#mini-react", 0).value).toBe("저지방");
+  expect(document.querySelector("#mini-react-patches")?.textContent).toBe(
+    'REMOVE [0, 1]\nTEXT [1, 0] "합계: 2000원"',
+  );
+  await Promise.resolve();
+  expect(document.querySelector("#vanilla-created")?.textContent).toBe(
+    "방금 새로 만든 요소: 8개",
+  );
   expect(document.querySelector("#mini-react-created")?.textContent).toBe(
     "방금 새로 만든 요소: 0개",
   );

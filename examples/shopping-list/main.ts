@@ -6,6 +6,7 @@ import {
 import type { VNode } from "../../src/vnode";
 import { startCreatedCounter } from "./created-counter";
 import { addedItem, getItemSum, type Item, initialItems } from "./items";
+import { startPatchList } from "./patch-list";
 import { startVanillaShoppingList } from "./vanilla";
 
 function createItemLine({ item, index }: { item: Item; index: number }): VNode {
@@ -67,21 +68,24 @@ const ShoppingListRootComponent: RootComponent = ({ on }): VNode => {
   };
 };
 
-const vanillaContainer = document.querySelector("#vanilla");
-const miniReactContainer = document.querySelector("#mini-react");
-const vanillaCreated = document.querySelector("#vanilla-created");
-const miniReactCreated = document.querySelector("#mini-react-created");
-if (
-  vanillaContainer === null ||
-  miniReactContainer === null ||
-  vanillaCreated === null ||
-  miniReactCreated === null
-) {
-  throw new Error(
-    "#vanilla, #mini-react, #vanilla-created, #mini-react-created 요소가 필요합니다",
-  );
+function getElement(selector: string): Element {
+  const element = document.querySelector(selector);
+  if (element === null) throw new Error(`${selector} 요소가 필요합니다`);
+  return element;
 }
+
+const vanillaContainer = getElement("#vanilla");
+const miniReactContainer = getElement("#mini-react");
 startVanillaShoppingList(vanillaContainer);
 new FunctionComponent(ShoppingListRootComponent).mount(miniReactContainer);
-startCreatedCounter(vanillaContainer, vanillaCreated);
-startCreatedCounter(miniReactContainer, miniReactCreated);
+startCreatedCounter(
+  vanillaContainer,
+  getElement("#vanilla-created"),
+  getElement("#vanilla-created-detail"),
+);
+startCreatedCounter(
+  miniReactContainer,
+  getElement("#mini-react-created"),
+  getElement("#mini-react-created-detail"),
+);
+startPatchList(miniReactContainer, getElement("#mini-react-patches"));

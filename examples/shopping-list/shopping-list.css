@@ -70,6 +70,28 @@ input:focus-visible {
   color: var(--muted);
 }
 
+.created-detail {
+  min-height: 20px;
+  margin: 0;
+  font:
+    12px / 1.5 ui-monospace,
+    SFMono-Regular,
+    Consolas,
+    monospace;
+  color: var(--muted);
+}
+
+h3 {
+  margin: 12px 0 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+pre {
+  min-height: 40px;
+}
+
 /* 요소가 DOM에 새로 들어올 때만 실행되므로, 새로 만든 줄만 색이 바뀝니다. */
 li {
   margin: 0 -6px;
