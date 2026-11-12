@@ -18,7 +18,7 @@
 - React의 핵심 흐름만 남긴 간소화 버전
 - 구조를 단순하게 유지해서 코드를 따라 읽기만 해도 핵심 로직 파악 가능
 
-**지원하는 것**
+**Features**
 - 함수형 컴포넌트로 화면 렌더링
 - `useState`, `useEffect`, `useMemo`
 - State가 바뀌면 이전 화면과 비교해서 바뀐 부분만 DOM에 반영
@@ -128,35 +128,9 @@ patches   { type: "TEXT", path: [0, 1, 5, 3, 0], text: "2" }   동료 평가의 
 
 mini-react는 `key`가 없어 같은 번호의 자식끼리 비교합니다([`diff-compares-same-index-children-first`](docs/adr/diff/diff-compares-same-index-children-first.md)). mini-react의 줄은 테스트 K5가 확인합니다. Vanilla와 React의 줄은 이 저장소에서 재지 않았습니다.
 
-## How We Built It
-
-과제 문서의 문장 하나하나를 설계 결정(ADR)과 테스트로 연결하고, 그 연결이 끊기지 않았는지 CI가 PR마다 검사합니다.
-
-> 개발 원칙: (팀에서 정한 키워드 1~2개 + 한 줄 설명)
-
-```text
-과제 문서 문장 (LMS)  ─►  설계 결정 (ADR)  ─►  테스트  ─►  코드
-        69개                  101개         ADR이 인용한 ID 342개
-```
-
-- **LMS 문장:** 과제 문서의 문장입니다. Phase 1은 `S1~S32`, Phase 2는 `L1~L37`로 번호를 붙였습니다 → [docs/requirements](docs/requirements/README.md)
-- **ADR:** 결정 하나에 문서 하나이고, 무엇을 왜 그렇게 정했는지 적습니다 → [docs/adr](docs/adr/README.md)
-- **테스트 ID:** `F`는 `function-component.test.ts`, `K`는 `ranking-page.test.ts`의 테스트입니다
+## How We Built It (TBD)
 
 
-### 예시: useState 한 줄이 코드까지
-
-LMS L16은 "최소 구현 대상: useState" 한 줄입니다. 이 한 줄을 구현하려면 다섯 가지를 정해야 했고, 결정마다 ADR 하나와 테스트가 있습니다.
-
-| 단계 | 결정 (ADR) | 모르고 쓰면 | 테스트 |
-| ---- | ---------- | ----------- | ------ |
-| `render` | [Hook의 칸은 렌더링마다 0부터 다시 세는 호출 순서로 찾습니다](docs/adr/render/hook-cells-are-found-by-call-order.md) | 조건에 따라 Hook 호출을 건너뛰면, 뒤쪽 Hook이 앞쪽 Hook의 칸 값을 받습니다 | F8, F17, F20, F21, F101, F102, F139, F42, F70 |
-| `render` | [초깃값이 함수이면 첫 렌더링에서 한 번 불러 그 결과를 씁니다](docs/adr/render/initial-value-function-is-called-once.md) | `useState(myFn)`은 `myFn()`의 반환값을 저장합니다 | F17, F19 |
-| `setter` | [setter에 함수를 넘기면 칸의 현재 값으로 불러 그 결과를 새 값으로 씁니다](docs/adr/setter/setter-accepts-updater-function.md) | `setFn(myFn)`은 `myFn(현재 값)`의 반환값을 저장합니다 | F23, F35, F38, F25 |
-| `setter` | [새 값이 칸의 값과 같으면(`Object.is`) `update()`를 부르지 않습니다](docs/adr/setter/setter-skips-same-value.md) | 배열을 `push`로 고친 뒤 같은 배열을 넘기면 화면이 바뀌지 않습니다 | F18, F24, F27~F31, F33, F36, F32, F34 |
-| `setter` | [칸에 새 값을 쓴 뒤 바로 `update()`를 부르고, 여러 호출을 모으지 않습니다 (범위)](docs/adr/setter/setter-updates-without-batching.md) | 클릭 한 번에 setter를 두 번 부르면 렌더링도 두 번 일어납니다 | F37, F35 |
-
-코드는 `src/function-component.ts`의 `useState`와 `createStateCell`입니다. 네 번째 결정은 [Demo](#demo)의 순위 페이지에서 5점인 사람의 `+`를 누르면 볼 수 있습니다.
 
 ### 자동 검사
 
