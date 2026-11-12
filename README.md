@@ -207,7 +207,7 @@ new FunctionComponent(() => "Hello World").mount(container);
 | GitHub 계정   | 이름 | 브랜치    | 
 | :------------ | :--- | :-------- |
 | `benjohnbill` | 조진근 | `CJG`     |
-| `oyatmin1031` | 이민호 | (확인 필요) |
+| `oyatmin1031` | 이민호 | `LMH` |
 | `DavinAn6`    | 안다빈 | `Davin`   |
 
 
