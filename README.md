@@ -9,7 +9,7 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-7-3178C6?logo=typescript&logoColor=white)
 ![Runtime deps](https://img.shields.io/badge/runtime%20deps-0-brightgreen)
 
-[Overview](#overview) · [Architecture](#architecture) · [Demo](#demo) · [How We Built It](#how-we-built-it) · [Environment](#environment) · [Getting Started](#getting-started) · [Team](#team)
+[Overview](#overview) · [Architecture](#architecture) · [Demo](#demo) · [How We Built It](#how-we-built-it-tbd) · [Environment](#environment) · [Getting Started](#getting-started) · [Team](#team)
 
 
 ## Overview
